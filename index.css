@@ -1,0 +1,67 @@
+@layer base {
+  body {
+    @apply bg-[#fdfdfd] text-[#1a1a1a] dark:bg-[#0F172A] dark:text-[#F1F5F9];
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  .glass {
+    @apply bg-white/70 backdrop-blur-md border border-white/20 dark:bg-white/5 dark:border-white/10;
+  }
+
+  .panel-card {
+    @apply bg-white dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/10 shadow-[0_8px_30px_rgb(0, 0, 0, 0.04)] transition-all duration-300 hover:shadow-[0_8px_30_px_rgb(0, 0, 0, 0.08)];
+  }
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #cbd5e1;
+}
+
+@layer utilities {
+  .animate-bounce-soft {
+    animation: bounce-soft 3s ease-in-out infinite;
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.5s ease-out forwards;
+  }
+
+  @keyframes bounce-soft {
+
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
