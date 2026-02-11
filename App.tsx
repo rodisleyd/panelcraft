@@ -37,6 +37,22 @@ const App: React.FC = () => {
   const [aiChatPrompt, setAiChatPrompt] = useState<string | undefined>(undefined);
   const [isOnline, setIsOnline] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: any) => {
+      // Impede que o mini-infobar padrão apareça no mobile
+      e.preventDefault();
+      // Guarda o evento para ser disparado depois
+      setDeferredPrompt(e);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [userId] = useState(() => Math.random().toString(36).substr(2, 9));
   const [userName, setUserName] = useState(() => {
@@ -903,6 +919,35 @@ const App: React.FC = () => {
       <div className="print:hidden">
         <CustomModal {...modalConfig} />
       </div>
+
+      {/* PWA Install Button (Floating) */}
+      {deferredPrompt && (
+        <div className="fixed bottom-6 right-6 z-[100] animate-bounce-subtle print:hidden group">
+          <button
+            onClick={async () => {
+              if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                  setDeferredPrompt(null);
+                }
+              }
+            }}
+            className="flex items-center gap-2 px-6 py-3 bg-brand-cyan text-white rounded-full shadow-2xl hover:scale-105 active:scale-95 transition-all font-black text-xs uppercase tracking-widest ring-4 ring-brand-cyan/20 border border-white/20"
+          >
+            <MaterialIcon name="install_desktop" className="text-lg" />
+            <span>Instalar Desktop</span>
+
+            {/* Tooltip */}
+            <div className="absolute bottom-full right-0 mb-3 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+              <div className="bg-brand-dark text-white text-[10px] px-3 py-2 rounded-xl shadow-2xl whitespace-nowrap font-bold border border-white/10">
+                Ter acesso rápido e usar offline 🚀
+                <div className="absolute top-full right-6 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-brand-dark" />
+              </div>
+            </div>
+          </button>
+        </div>
+      )}
 
       <style dangerouslySetInnerHTML={{
         __html: `
