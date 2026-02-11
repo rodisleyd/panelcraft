@@ -493,7 +493,7 @@ const App: React.FC = () => {
       const newRoomId = Math.random().toString(36).substr(2, 12);
       setScript(prev => ({ ...prev, roomId: newRoomId }));
       setIsOnline(true);
-      showAlert("Modo Colaborativo", "A sincronização foi ativada! Use o botão 'Convidar' para compartilhar o link com outros roteiristas.");
+      showAlert("Modo Colaborativo", "A sincronização foi ativada! Use o botão 'Enviar Link' para compartilhar o link com outros roteiristas.");
     } else {
       showConfirm(
         "Sair do Modo Online",

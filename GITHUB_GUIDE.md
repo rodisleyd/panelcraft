@@ -38,4 +38,19 @@ Vá até a página do seu repositório no GitHub e atualize. Você verá todos o
 > [!IMPORTANT]
 > Eu já atualizei o seu arquivo `.gitignore` para garantir que o arquivo `.env` **não** seja enviado para o GitHub. Isso é fundamental para manter sua chave da API segura!
 
-Depois que o código estiver lá, você pode seguir para o deploy na Vercel usando o guia que criamos antes.
+## 4. Como enviar atualizações no futuro
+Sempre que você fizer uma mudança no código e quiser que ela apareça no site (Vercel), rode estes 3 comandos:
+
+```powershell
+# 1. Avisar ao Git quais arquivos mudaram
+git add .
+
+# 2. Dar um nome para a sua atualização
+git commit -m "fiz tal mudança no layout"
+
+# 3. Enviar para o GitHub
+git push origin main
+```
+
+> [!TIP]
+> Assim que você rodar o `git push`, a Vercel vai detectar a mudança e começar a publicar a nova versão do site automaticamente! 🚀
