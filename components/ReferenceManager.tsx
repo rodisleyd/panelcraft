@@ -55,19 +55,28 @@ const ReferenceManager: React.FC<ReferenceManagerProps> = ({ references, onAdd, 
 
     return (
         <div className="mt-6 border-t border-flat-grayDark/30 dark:border-white/10 pt-4">
-            <div className="flex items-center gap-3 mb-3">
-                <label className="text-[10px] font-bold text-flat-grayMid dark:text-white/40 uppercase tracking-widest flex items-center gap-2">
-                    <MaterialIcon name="collections" className="text-sm" />
-                    Referências Visuais
-                </label>
+            {!showAdd ? (
                 <button
-                    onClick={() => setShowAdd(!showAdd)}
-                    className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full transition-all border ${showAdd ? 'bg-brand-pink text-white border-brand-pink' : 'bg-transparent text-flat-grayMid border-flat-grayDark/50 dark:border-white/10 hover:bg-flat-dark/10 dark:hover:bg-white/5'
-                        }`}
+                    onClick={() => setShowAdd(true)}
+                    className="w-full flex items-center justify-center gap-2 py-3 bg-flat-dark/5 dark:bg-white/5 border-2 border-dashed border-flat-grayDark/20 dark:border-white/10 rounded-xl text-flat-grayMid dark:text-white/40 hover:bg-white dark:hover:bg-white/10 hover:border-brand-cyan transition-all text-[10px] font-black uppercase tracking-widest mb-4 group"
                 >
-                    {showAdd ? 'Fechar' : 'Adicionar'}
+                    <MaterialIcon name="add_photo_alternate" className="text-sm group-hover:text-brand-cyan" />
+                    Adicionar referência visual
                 </button>
-            </div>
+            ) : (
+                <div className="flex items-center justify-between mb-4">
+                    <label className="text-[10px] font-bold text-brand-cyan uppercase tracking-widest flex items-center gap-2">
+                        <MaterialIcon name="collections" className="text-sm" />
+                        Novas Referências
+                    </label>
+                    <button
+                        onClick={() => setShowAdd(false)}
+                        className="text-[9px] font-black uppercase tracking-widest px-3 py-1 bg-brand-pink text-white rounded-full border border-brand-pink hover:bg-brand-dark transition-all"
+                    >
+                        Fechar
+                    </button>
+                </div>
+            )}
 
             {showAdd && (
                 <div className="bg-flat-dark/20 dark:bg-white/5 rounded-lg p-3 mb-4 border border-flat-grayDark/30 dark:border-white/10 animate-fade-in">

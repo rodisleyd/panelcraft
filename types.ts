@@ -17,6 +17,7 @@ export interface PanelData {
   action: string;
   dialogues: DialogueEntry[];
   captions: string;
+  notes?: string;
   references?: Reference[];
 }
 

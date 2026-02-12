@@ -21,6 +21,7 @@ interface PanelEditorProps {
 
 const PanelEditor: React.FC<PanelEditorProps> = ({ panel, index, onUpdate, onDelete, isActive, onAddPanel, pageId, characters, onShowAlert, onOpenAIChat }) => {
   const [isRefining, setIsRefining] = React.useState<string | null>(null);
+  const [isNotesOpen, setIsNotesOpen] = React.useState(false);
 
   const handleRefine = async (field: 'action' | 'dialogue' | 'captions', dialogueId?: string) => {
     let textToRefine = "";
@@ -105,13 +106,41 @@ const PanelEditor: React.FC<PanelEditorProps> = ({ panel, index, onUpdate, onDel
       <div className="absolute -top-3 xl:-top-4 left-4 xl:left-6 px-2 xl:px-3 py-1 bg-white dark:bg-brand-dark border border-flat-grayDark/50 dark:border-white/10 rounded-full shadow-sm flex items-center gap-2 z-10">
         <span className="text-brand-cyan font-black text-[10px] xl:text-xs tracking-widest uppercase whitespace-nowrap">PAINEL {index + 1}</span>
         <button
+          onClick={() => setIsNotesOpen(!isNotesOpen)}
+          className={`transition-colors ml-1 xl:ml-2 p-1 rounded-md ${isNotesOpen ? 'bg-brand-pink text-white' : 'text-flat-grayMid hover:text-brand-pink'}`}
+          title="Ver/Editar Notas"
+        >
+          <MaterialIcon name="sticky_note_2" className="text-xs xl:text-sm" />
+          {panel.notes && !isNotesOpen && (
+            <span className="absolute -top-1 -right-1 w-2 h-2 bg-brand-pink rounded-full border border-white dark:border-brand-dark" />
+          )}
+        </button>
+        <button
           onClick={() => onDelete(panel.id)}
-          className="text-flat-grayMid hover:text-brand-pink transition-colors ml-1 xl:ml-2"
+          className="text-flat-grayMid hover:text-brand-pink transition-colors ml-1"
           title="Excluir Painel"
         >
           <MaterialIcon name="delete" className="text-xs xl:text-sm" />
         </button>
       </div>
+
+      {isNotesOpen && (
+        <div className="mb-6 animate-slide-down">
+          <div className="bg-brand-pink/5 dark:bg-brand-pink/10 border-2 border-dashed border-brand-pink/30 rounded-2xl p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <MaterialIcon name="description" className="text-brand-pink text-sm" />
+              <label className="text-[10px] font-black text-brand-pink uppercase tracking-widest">Notas Colaborativas</label>
+            </div>
+            <textarea
+              autoFocus
+              value={panel.notes || ''}
+              onChange={(e) => onUpdate(panel.id, 'notes', e.target.value)}
+              placeholder="Escreva anotações ou recados para outros roteiristas aqui..."
+              className="w-full bg-white dark:bg-white/5 border border-brand-pink/10 dark:border-white/10 rounded-xl p-3 text-sm min-h-[80px] focus:outline-none focus:border-brand-pink transition-all text-flat-black dark:text-white placeholder-brand-pink/30 font-medium"
+            />
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 xl:gap-6 pt-4">
         {/* ACTION COLUMN */}

@@ -765,24 +765,39 @@ const App: React.FC = () => {
                 <div className="h-[2px] flex-1 bg-gradient-to-l from-flat-cyan to-flat-grayDark/20" />
               </div>
 
-              {page.panels?.map((panel, idx) => (
-                <PanelEditor
-                  key={panel.id}
-                  panel={panel}
-                  index={idx}
-                  isActive={activePanelId === panel.id}
-                  onUpdate={updatePanel}
-                  onDelete={removePanel}
-                  onAddPanel={addPanel}
-                  pageId={page.id}
-                  characters={script.characters}
-                  onShowAlert={showAlert}
-                  onOpenAIChat={(prompt) => {
-                    setAiChatPrompt(prompt);
-                    setShowAIChat(true);
-                  }}
-                />
-              ))}
+              {page.panels?.map((panel, idx) => {
+                // Coletar todos os nomes de personagens já usados no roteiro para auto-complete
+                const dialogueChars = script.pages.flatMap(p =>
+                  p.panels.flatMap(pan =>
+                    pan.dialogues.map(d => d.character)
+                  )
+                );
+                const allUniqueChars = Array.from(new Set([
+                  ...script.characters.map(c => c.name),
+                  ...dialogueChars
+                ]))
+                  .filter(Boolean)
+                  .map(name => ({ name }));
+
+                return (
+                  <PanelEditor
+                    key={panel.id}
+                    panel={panel}
+                    index={idx}
+                    isActive={activePanelId === panel.id}
+                    onUpdate={updatePanel}
+                    onDelete={removePanel}
+                    onAddPanel={addPanel}
+                    pageId={page.id}
+                    characters={allUniqueChars}
+                    onShowAlert={showAlert}
+                    onOpenAIChat={(prompt) => {
+                      setAiChatPrompt(prompt);
+                      setShowAIChat(true);
+                    }}
+                  />
+                );
+              })}
 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8 opacity-80 hover:opacity-100 transition-opacity">
                 <button

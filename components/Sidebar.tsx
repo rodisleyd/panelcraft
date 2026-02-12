@@ -58,8 +58,8 @@ const Sidebar: React.FC<SidebarProps> = ({
       <div className="flex-1 overflow-y-auto p-2 space-y-4 custom-scrollbar">
         {script.pages.map((page) => (
           <div key={page.id} className="space-y-1">
-            <div className="flex items-center justify-between px-3 py-2 bg-flat-dark/40 dark:bg-white/5 rounded-xl group border border-flat-grayDark/30 dark:border-white/10">
-              <span className="text-[10px] font-black text-flat-grayMid dark:text-white/40 uppercase tracking-tighter">Página {page.number}</span>
+            <div className="flex items-center justify-between px-3 py-2 bg-brand-pink/10 dark:bg-brand-pink/5 rounded-xl group border border-brand-pink/20 dark:border-brand-pink/10">
+              <span className="text-[10px] font-black text-brand-pink dark:text-brand-pink uppercase tracking-tighter">Página {page.number}</span>
               <button
                 onClick={() => onRemovePage(page.id)}
                 className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:text-brand-pink text-flat-grayMid"

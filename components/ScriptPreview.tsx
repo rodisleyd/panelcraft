@@ -53,7 +53,7 @@ const ScriptPreview: React.FC<ScriptPreviewProps> = ({ script, onClose }) => {
                                 {pageIdx === 0 && (
                                     <>
                                         <div className="flex justify-between items-start mb-12">
-                                            <img src="https://i.ibb.co/LDwYxyWd/LOGO-PANELCRAFT.png" alt="PanelCraft" className="h-10 w-auto object-contain" />
+                                            <img src="https://i.ibb.co/LD0gPkTn/LOGO-PANELCRAFT-NOVO-PSITIVO.png" alt="PanelCraft" className="h-8 w-auto object-contain mb-2 print:h-10" />
                                             <div className="text-right">
                                                 <span className="text-[12px] font-medium text-gray-500 italic">{script.treatment || 'Tratamento 1'}</span>
                                             </div>
