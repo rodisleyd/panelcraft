@@ -16,11 +16,12 @@ const ReferencePreview: React.FC<ReferencePreviewProps> = ({ script, onClose }) 
     // Coletar todos os painéis que possuem referências
     const panelsWithRefs = script.pages.flatMap(page =>
         page.panels
-            .filter(panel => panel.references && panel.references.length > 0)
-            .map(panel => ({
+            .map((panel, idx) => ({
                 ...panel,
-                pageNumber: page.number
+                pageNumber: page.number,
+                panelNumber: idx + 1
             }))
+            .filter(panel => panel.references && panel.references.length > 0)
     );
 
     return (
@@ -78,7 +79,7 @@ const ReferencePreview: React.FC<ReferencePreviewProps> = ({ script, onClose }) 
                                     <div key={panel.id} className="page-break-content">
                                         <div className="bg-flat-dark/10 p-2 mb-4 flex items-center justify-between border-l-4 border-black">
                                             <span className="font-black text-xs uppercase tracking-widest">
-                                                Página {panel.pageNumber} — Painel {panel.id.substr(0, 3).toUpperCase()}
+                                                Página {panel.pageNumber} — Painel {panel.panelNumber}
                                             </span>
                                             <span className="text-[10px] font-bold text-gray-500 italic truncate ml-4 max-w-[400px]">
                                                 "{panel.action.substr(0, 100)}..."

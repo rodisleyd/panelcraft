@@ -175,6 +175,14 @@ const PanelEditor: React.FC<PanelEditorProps> = ({ panel, index, onUpdate, onDel
             placeholder="O que acontece visualmente?"
             className="w-full bg-flat-dark/40 dark:bg-white/5 border border-flat-grayDark/50 dark:border-white/10 focus:border-brand-cyan focus:bg-white dark:focus:bg-white/10 focus:ring-4 focus:ring-brand-cyan/5 rounded-xl p-4 text-base min-h-[160px] resize-none focus:outline-none transition-all text-flat-black dark:text-white placeholder-flat-grayMid/40 font-medium leading-relaxed"
           />
+
+          {/* REFERENCES SECTION - MOVED HERE */}
+          <ReferenceManager
+            references={panel.references || []}
+            onAdd={handleAddReference}
+            onRemove={handleRemoveReference}
+            onShowAlert={onShowAlert}
+          />
         </div>
 
         {/* DIALOGUE COLUMN */}
@@ -292,13 +300,6 @@ const PanelEditor: React.FC<PanelEditorProps> = ({ panel, index, onUpdate, onDel
         </div>
       </div>
 
-      {/* REFERENCES SECTION */}
-      <ReferenceManager
-        references={panel.references || []}
-        onAdd={handleAddReference}
-        onRemove={handleRemoveReference}
-        onShowAlert={onShowAlert}
-      />
     </div>
   );
 };
