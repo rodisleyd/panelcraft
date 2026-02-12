@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { ScriptData, PageData, PanelData } from '../types';
 import { MaterialIcon } from '../constants';
 
@@ -30,6 +30,27 @@ const Sidebar: React.FC<SidebarProps> = ({
   onNewScript,
   onClose
 }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredPages = script.pages.filter(page => {
+    if (!searchTerm) return true;
+
+    // Busca por número de página
+    const searchLower = searchTerm.toLowerCase();
+    if (page.number.toString().includes(searchLower)) return true;
+    if (`pagina ${page.number}`.includes(searchLower)) return true;
+    if (`pág ${page.number}`.includes(searchLower)) return true;
+
+    // Busca dentro dos painéis (ação e diálogos)
+    return page.panels.some(panel =>
+      panel.action.toLowerCase().includes(searchLower) ||
+      panel.dialogues.some(d =>
+        d.character.toLowerCase().includes(searchLower) ||
+        d.text.toLowerCase().includes(searchLower)
+      )
+    );
+  });
+
   return (
     <aside className="w-80 xl:w-72 flex-shrink-0 bg-white dark:bg-brand-dark border-r border-flat-grayDark/50 dark:border-white/10 h-full flex flex-col overflow-hidden shadow-premium transition-colors duration-300">
       {/* Mobile Close Button */}
@@ -55,8 +76,33 @@ const Sidebar: React.FC<SidebarProps> = ({
         </button>
       </div>
 
+      {/* Search Bar */}
+      <div className="px-4 py-3 border-b border-flat-grayDark/30 dark:border-white/10 bg-white dark:bg-brand-dark">
+        <div className="relative group">
+          <MaterialIcon
+            name="search"
+            className={`absolute left-3 top-1/2 -translate-y-1/2 text-sm transition-colors ${searchTerm ? 'text-brand-pink' : 'text-flat-grayMid'}`}
+          />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Ir para página ou buscar texto..."
+            className="w-full bg-flat-dark/10 dark:bg-white/5 border border-flat-grayDark/20 dark:border-white/5 rounded-full pl-9 pr-4 py-2 text-[11px] focus:outline-none focus:border-brand-pink focus:ring-2 focus:ring-brand-pink/10 transition-all text-flat-black dark:text-white placeholder-flat-grayMid/40 font-bold"
+          />
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-flat-grayMid hover:text-brand-pink transition-colors"
+            >
+              <MaterialIcon name="close" className="text-xs" />
+            </button>
+          )}
+        </div>
+      </div>
+
       <div className="flex-1 overflow-y-auto p-2 space-y-4 custom-scrollbar">
-        {script.pages.map((page) => (
+        {filteredPages.map((page) => (
           <div key={page.id} className="space-y-1">
             <div className="flex items-center justify-between px-3 py-2 bg-brand-pink/10 dark:bg-brand-pink/5 rounded-xl group border border-brand-pink/20 dark:border-brand-pink/10">
               <span className="text-[10px] font-black text-brand-pink dark:text-brand-pink uppercase tracking-tighter">Página {page.number}</span>
@@ -72,7 +118,11 @@ const Sidebar: React.FC<SidebarProps> = ({
               {page.panels.map((panel, idx) => (
                 <button
                   key={panel.id}
-                  onClick={() => onSelectPanel(panel.id)}
+                  onClick={() => {
+                    onSelectPanel(panel.id);
+                    // No mobile, fecha a sidebar ao selecionar
+                    if (window.innerWidth < 1280 && onClose) onClose();
+                  }}
                   className={`w-full text-left px-4 py-3 rounded-xl text-sm transition-all flex items-center gap-3 group border border-transparent ${activePanelId === panel.id
                     ? 'bg-brand-dark dark:bg-flat-cyan text-white shadow-xl shadow-brand-dark/10'
                     : 'text-flat-grayLight dark:text-white/60 hover:bg-white dark:hover:bg-white/5 hover:border-flat-grayDark/50 dark:hover:border-white/10 hover:shadow-sm'
@@ -86,9 +136,20 @@ const Sidebar: React.FC<SidebarProps> = ({
           </div>
         ))}
 
-        {script.pages.length === 0 && (
-          <div className="text-center py-8 text-flat-grayMid dark:text-white/20 text-xs italic">
-            Nenhuma página adicionada.
+        {filteredPages.length === 0 && (
+          <div className="text-center py-12 px-4 animate-fade-in">
+            <MaterialIcon name="search_off" className="text-3xl text-flat-grayMid/20 mb-2" />
+            <div className="text-flat-grayMid dark:text-white/20 text-[10px] font-black uppercase tracking-widest italic">
+              {searchTerm ? 'Nenhuma página encontrada' : 'Nenhuma página adicionada.'}
+            </div>
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="mt-2 text-[8px] font-black text-brand-pink uppercase hover:underline"
+              >
+                Limpar Busca
+              </button>
+            )}
           </div>
         )}
       </div>
