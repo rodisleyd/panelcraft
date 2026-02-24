@@ -21,7 +21,7 @@ export const UI_LABELS = {
 };
 
 export const MaterialIcon = ({ name, className = "" }: { name: string, className?: string }) => (
-  <span className={`material-symbols-outlined select-none ${className}`}>
+  <span className={`material-symbols-outlined select-none not-italic normal-case ${className}`}>
     {name}
   </span>
 );

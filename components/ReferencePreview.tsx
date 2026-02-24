@@ -64,7 +64,7 @@ const ReferencePreview: React.FC<ReferencePreviewProps> = ({ script, onClose }) 
                         {/* Header */}
                         <div className="flex justify-between items-start mb-8 border-b-2 border-black pb-4">
                             <div>
-                                <img src="https://i.ibb.co/LD0gPkTn/LOGO-PANELCRAFT-NOVO-PSITIVO.png" alt="PanelCraft" className="h-8 w-auto object-contain mb-2" />
+                                <img src="/logo-light-1.5.png" alt="PanelCraft" className="h-8 w-auto object-contain mb-2" />
                                 <h1 className="text-2xl font-black uppercase tracking-tight">Guia de Referências Visuais</h1>
                             </div>
                             <div className="text-right flex flex-col items-end">

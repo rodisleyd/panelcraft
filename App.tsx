@@ -10,7 +10,12 @@ import ReferencePreview from './components/ReferencePreview';
 import CustomModal, { ModalConfig } from './components/CustomModal';
 import AIChatSidebar from './components/AIChatSidebar';
 import CollaborationMenu from './components/CollaborationMenu';
+import CollaborationChat from './components/CollaborationChat';
+import StoryFoundation from './components/StoryFoundation';
+import SplashScreen from './components/SplashScreen';
 import * as syncService from './services/firebaseService';
+import * as exportUtils from './utils/exportUtils';
+import { useHistory } from './hooks/useHistory';
 import { Collaborator } from './types';
 
 const LOCAL_STORAGE_KEY = 'panelcraft-script-v1';
@@ -18,13 +23,23 @@ const HISTORY_KEY = 'panelcraft-projects-history';
 const DEFAULT_TITLE = 'Meu Novo Roteiro';
 
 const App: React.FC = () => {
-  const [script, setScript] = useState<ScriptData>({
+  const {
+    state: script,
+    set: setScript,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    reset: resetScript
+  } = useHistory<ScriptData>({
     id: Math.random().toString(36).substr(2, 9),
     title: DEFAULT_TITLE,
     author: '',
-    treatment: 'Tratamento 1',
+    treatment: '',
+    trt: '',
     characters: [],
-    pages: []
+    pages: [],
+    outline: []
   });
   const [recentProjects, setRecentProjects] = useState<ScriptData[]>([]);
   const [activePanelId, setActivePanelId] = useState<string | null>(null);
@@ -36,8 +51,11 @@ const App: React.FC = () => {
   const [showAIChat, setShowAIChat] = useState(false);
   const [aiChatPrompt, setAiChatPrompt] = useState<string | undefined>(undefined);
   const [isOnline, setIsOnline] = useState(false);
+  const [showChat, setShowChat] = useState(false);
+  const [showFoundation, setShowFoundation] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: any) => {
@@ -65,8 +83,8 @@ const App: React.FC = () => {
     return saved === 'true';
   });
 
-  const LOGO_LIGHT = "https://i.ibb.co/LD0gPkTn/LOGO-PANELCRAFT-NOVO-PSITIVO.png";
-  const LOGO_DARK = "https://i.ibb.co/mV8MykGm/LOGO-PANELCRAFT-NOVO-NEGATIVO.png";
+  const LOGO_LIGHT = "/logo-light-1.5.png";
+  const LOGO_DARK = "/logo-dark-1.5.png";
 
   useEffect(() => {
     localStorage.setItem('panelcraft-username', userName);
@@ -133,7 +151,7 @@ const App: React.FC = () => {
   };
 
   const loadProject = (project: ScriptData) => {
-    setScript(project);
+    resetScript(project);
     setActivePanelId(null);
   };
 
@@ -175,6 +193,7 @@ const App: React.FC = () => {
             ...prev,
             ...parsed,
             characters: parsed.characters || [],
+            outline: parsed.outline || [],
             pages: (parsed.pages || []).map((p: any) => ({
               ...p,
               panels: (p.panels || []).map((panel: any) => ({
@@ -198,10 +217,15 @@ const App: React.FC = () => {
         userId,
         userName,
         (newData) => {
+          // Se estivermos digitando ativamente, ignore atualizações remotas para o script
+          // para evitar que o cursor pule ou caracteres sejam perdidos (race condition)
+          if (lastTypingStateRef.current) return;
+
           // Sanitização: Firebase remove arrays vazios, precisamos restaurá-los
           const sanitizedData = {
             ...newData,
             characters: newData.characters || [],
+            outline: newData.outline || [],
             pages: (newData.pages || []).map((p: any) => ({
               ...p,
               panels: p.panels || []
@@ -209,8 +233,16 @@ const App: React.FC = () => {
           };
 
           setScript(prev => {
-            const isDifferent = JSON.stringify(prev) !== JSON.stringify(sanitizedData);
-            return isDifferent ? sanitizedData : prev;
+            const updatedData = {
+              ...sanitizedData,
+              roomId: prev.roomId // Preserve the local roomId
+            };
+
+            // Comparação profunda para evitar re-renders desnecessários
+            const isDifferent = JSON.stringify(prev) !== JSON.stringify(updatedData);
+
+            console.log("Sync: Atualização remota recebida", { isDifferent });
+            return isDifferent ? updatedData : prev;
           });
         },
         (users) => {
@@ -260,6 +292,32 @@ const App: React.FC = () => {
     };
   }, [script.pages, isOnline, updateTypingStatus]);
 
+  // Keyboard Shortcuts for Undo/Redo
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        if (e.shiftKey) {
+          e.preventDefault();
+          redo();
+        } else {
+          e.preventDefault();
+          undo();
+        }
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
+        e.preventDefault();
+        redo();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.altKey && e.key.toLowerCase() === 'f') {
+        e.preventDefault();
+        setFocusMode(prev => !prev);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [undo, redo]);
+
   // Auto-save and Broadcast
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -305,6 +363,43 @@ const App: React.FC = () => {
     }));
   }, []);
 
+  const insertPageAfter = useCallback((index: number) => {
+    const newPage: PageData = {
+      id: Math.random().toString(36).substr(2, 9),
+      number: 0, // Will be recalculated
+      panels: []
+    };
+
+    setScript(prev => {
+      const newPages = [...prev.pages];
+      newPages.splice(index + 1, 0, newPage);
+
+      // Recalculate all page numbers
+      const renumberedPages = newPages.map((p, i) => ({
+        ...p,
+        number: i + 1
+      }));
+
+      return { ...prev, pages: renumberedPages };
+    });
+  }, []);
+
+  const reorderPages = useCallback((startIndex: number, endIndex: number) => {
+    setScript(prev => {
+      const result = Array.from(prev.pages);
+      const [removed] = result.splice(startIndex, 1);
+      result.splice(endIndex, 0, removed);
+
+      // Recalculate page numbers after reorder
+      const renumberedPages = result.map((p, i) => ({
+        ...p,
+        number: i + 1
+      }));
+
+      return { ...prev, pages: renumberedPages };
+    });
+  }, []);
+
   const addCharacter = useCallback(() => {
     const newChar = {
       id: Math.random().toString(36).substr(2, 9),
@@ -331,6 +426,7 @@ const App: React.FC = () => {
     }));
   }, []);
 
+  // --- Handlers for Firebase ---
   const addPanel = useCallback(async (pageId: string, aiSuggest = false) => {
     setIsGenerating(aiSuggest);
 
@@ -405,12 +501,32 @@ const App: React.FC = () => {
 
   const exportScript = (format: ExportFormat) => {
     const filename = (script.title || 'Roteiro_Sem_Titulo').replace(/\s+/g, '_');
-    const content = JSON.stringify(script, null, 2);
-    const blob = new Blob([content], { type: 'application/json' });
+    let content = '';
+    let type = 'text/plain';
+    let extension = format.toLowerCase();
+
+    switch (format) {
+      case 'JSON':
+        content = JSON.stringify(script, null, 2);
+        type = 'application/json';
+        break;
+      case 'MARKDOWN':
+        content = exportUtils.scriptToMarkdown(script);
+        extension = 'md';
+        break;
+      case 'FOUNTAIN':
+        content = exportUtils.scriptToFountain(script);
+        break;
+      default:
+        content = exportUtils.scriptToProText(script);
+        extension = 'txt';
+    }
+
+    const blob = new Blob([content], { type });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${filename}_script.${format.toLowerCase()}`;
+    a.download = `${filename}_script.${extension}`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -537,6 +653,9 @@ const App: React.FC = () => {
               handleSelectPanel(id);
               setIsSidebarOpen(false); // Fecha sidebar ao selecionar painel em mobile
             }}
+            collapsed={!isSidebarOpen}
+            darkMode={darkMode}
+            onReorderPages={reorderPages}
             onAddPage={addPage}
             onRemovePage={removePage}
             onAddCharacter={addCharacter}
@@ -557,8 +676,10 @@ const App: React.FC = () => {
         />
       )}
 
+      {showSplash && <SplashScreen onComplete={() => setShowSplash(false)} />}
+
       {/* Main Content Area */}
-      <main className={`flex-1 flex flex-col min-w-0 ${darkMode ? 'bg-brand-dark' : 'bg-white'} print:hidden`}>
+      <main className={`flex-1 flex flex-col min-w-0 ${darkMode ? 'bg-brand-dark' : 'bg-white'} print:hidden transition-all duration-1000 ${showSplash ? 'blur-xl scale-110 grayscale-[0.5]' : 'blur-0 scale-100 grayscale-0'}`}>
         {/* Header */}
         <header className={`h-20 flex-shrink-0 ${darkMode ? 'bg-brand-dark/80 border-white/10' : 'glass border-flat-grayDark/50'} border-b px-4 lg:px-8 flex items-center justify-between z-30 shadow-premium sticky top-0 transition-all`}>
           <div className="flex items-center gap-2 lg:gap-8 min-w-0">
@@ -576,24 +697,22 @@ const App: React.FC = () => {
               alt="PanelCraft Logo"
               className="h-7 lg:h-12 w-auto object-contain transition-opacity duration-300 flex-shrink-0"
             />
-
-            <div className={`hidden sm:block h-8 w-[1px] ${darkMode ? 'bg-white/10' : 'bg-flat-grayDark/30'} mx-1`} />
-
-            {/* Tratamento */}
-            <div className="hidden lg:flex flex-col flex-shrink-0">
-              <label className="text-[8px] font-black text-flat-cyan uppercase tracking-widest ml-1">TRT:</label>
-              <input
-                value={script.treatment || ''}
-                onChange={(e) => setScript(prev => ({ ...prev, treatment: e.target.value }))}
-                className={`${darkMode ? 'bg-white/5 border-white/10 text-white' : 'bg-white/50 border-flat-grayDark/50 text-flat-black'} border rounded-lg focus:border-brand-cyan focus:ring-4 focus:ring-brand-cyan/10 text-[10px] xl:text-xs font-black placeholder-flat-grayMid/40 w-36 xl:w-48 px-2 py-1 transition-all outline-none text-center`}
-                placeholder="Tratamento"
-              />
-            </div>
           </div>
 
           <div className="flex-1" />
 
-          <div className="flex items-center gap-1.5 lg:gap-3 flex-shrink-0">
+          <div className="flex items-center gap-2 lg:gap-4 flex-shrink-0">
+            {/* Tratamento */}
+            <div className={`hidden lg:flex items-center gap-2 px-3 py-1.5 border rounded-xl transition-all shadow-sm ${darkMode ? 'bg-white/5 border-white/10' : 'bg-flat-dark/5 border-flat-grayDark/30'}`}>
+              <span className={`text-[8px] font-black uppercase tracking-widest ${darkMode ? 'text-flat-cyan' : 'text-brand-cyan'}`}>TRT</span>
+              <input
+                value={script.trt || ''}
+                onChange={(e) => setScript(prev => ({ ...prev, trt: e.target.value }))}
+                className={`bg-transparent border-none text-[10px] font-black placeholder-flat-grayMid/40 w-24 px-1 transition-all outline-none text-center ${darkMode ? 'text-white' : 'text-flat-black'}`}
+                placeholder="v1.0"
+              />
+            </div>
+
             <button
               onClick={() => setDarkMode(!darkMode)}
               className={`p-2 lg:p-2.5 rounded-xl transition-all flex items-center justify-center hover:scale-110 active:scale-95 ${darkMode ? 'bg-white/5 text-yellow-400 hover:bg-white/10' : 'bg-flat-dark/50 text-flat-grayLight hover:bg-flat-dark'}`}
@@ -601,6 +720,33 @@ const App: React.FC = () => {
             >
               <MaterialIcon name={darkMode ? "light_mode" : "dark_mode"} className="text-lg lg:text-xl" />
             </button>
+
+            <div className={`h-6 w-[1px] ${darkMode ? 'bg-white/10' : 'bg-flat-grayDark/50'} mx-0.5 lg:mx-1`} />
+
+            <div className="flex items-center gap-1 lg:gap-2">
+              <button
+                onClick={undo}
+                disabled={!canUndo}
+                className={`p-2 rounded-xl transition-all flex items-center justify-center ${canUndo
+                  ? (darkMode ? 'bg-white/5 text-white hover:bg-white/10' : 'bg-flat-dark/50 text-flat-grayLight hover:bg-flat-dark')
+                  : 'opacity-20 cursor-not-allowed'
+                  }`}
+                title="Desfazer (Ctrl+Z)"
+              >
+                <MaterialIcon name="undo" className="text-lg" />
+              </button>
+              <button
+                onClick={redo}
+                disabled={!canRedo}
+                className={`p-2 rounded-xl transition-all flex items-center justify-center ${canRedo
+                  ? (darkMode ? 'bg-white/5 text-white hover:bg-white/10' : 'bg-flat-dark/50 text-flat-grayLight hover:bg-flat-dark')
+                  : 'opacity-20 cursor-not-allowed'
+                  }`}
+                title="Refazer (Ctrl+Y)"
+              >
+                <MaterialIcon name="redo" className="text-lg" />
+              </button>
+            </div>
 
             <div className={`h-6 w-[1px] ${darkMode ? 'bg-white/10' : 'bg-flat-grayDark/50'} mx-0.5 lg:mx-2`} />
 
@@ -613,10 +759,20 @@ const App: React.FC = () => {
                 userId={userId}
                 onToggleOnline={toggleCollaboration}
                 onUpdateName={setUserName}
+                onToggleChat={() => setShowChat(!showChat)}
+                showChat={showChat}
               />
             </div>
 
             <div className={`hidden sm:block h-6 w-[1px] ${darkMode ? 'bg-white/10' : 'bg-flat-grayDark/50'} mx-1 xl:mx-2`} />
+
+            <button
+              onClick={() => setShowFoundation(true)}
+              className={`flex items-center gap-2 px-3 py-1.5 lg:px-4 lg:py-2 rounded-xl transition-all font-black text-[10px] lg:text-xs uppercase tracking-widest shadow-lg group border ${darkMode ? 'bg-white/5 border-white/10 text-brand-cyan hover:bg-white/10' : 'bg-white border-flat-grayDark text-brand-cyan hover:bg-flat-dark'}`}
+            >
+              <MaterialIcon name="architecture" className="text-brand-cyan text-sm lg:text-base group-hover:scale-110 transition-transform" />
+              <span className="hidden sm:inline">Argumento</span>
+            </button>
 
             <button
               onClick={() => {
@@ -631,29 +787,29 @@ const App: React.FC = () => {
               <span className="hidden xl:inline">IA</span>
             </button>
 
-            <div className="flex items-center gap-1.5 lg:gap-3">
+            <div className="flex items-center gap-2 lg:gap-4">
               <button
                 onClick={() => setShowPreview(true)}
-                className={`flex items-center gap-2 px-2.5 py-1.5 lg:px-3 lg:py-1.5 border rounded transition-all shadow-sm ${darkMode ? 'bg-white/5 border-white/10 text-white hover:bg-white/10' : 'bg-white border-flat-grayDark text-flat-black hover:bg-flat-dark'}`}
+                className={`group flex items-center gap-0 hover:gap-2 px-2.5 py-1.5 lg:px-3 lg:py-1.5 border rounded-xl transition-all shadow-sm overflow-hidden ${darkMode ? 'bg-white/5 border-white/10 text-white hover:bg-white/10' : 'bg-white border-flat-grayDark text-flat-black hover:bg-flat-dark'}`}
                 title="Visualizar Roteiro"
               >
                 <MaterialIcon name="visibility" className="text-sm text-brand-cyan" />
-                <span className="hidden sm:inline text-[10px] font-bold uppercase tracking-widest">Roteiro</span>
+                <span className="max-w-0 group-hover:max-w-[100px] transition-all duration-300 text-[10px] font-bold uppercase tracking-widest overflow-hidden whitespace-nowrap">Roteiro</span>
               </button>
 
               <button
                 onClick={() => setShowRefsPreview(true)}
-                className={`hidden lg:flex items-center gap-2 px-3 py-1.5 border rounded transition-all shadow-sm ${darkMode ? 'bg-white/5 border-white/10 text-white hover:bg-white/10' : 'bg-white border-flat-grayDark text-flat-black hover:bg-flat-dark'}`}
+                className={`hidden lg:flex group items-center gap-0 hover:gap-2 px-3 py-1.5 border rounded-xl transition-all shadow-sm overflow-hidden ${darkMode ? 'bg-white/5 border-white/10 text-white hover:bg-white/10' : 'bg-white border-flat-grayDark text-flat-black hover:bg-flat-dark'}`}
                 title="Guia de Referências"
               >
                 <MaterialIcon name="collections" className="text-sm text-brand-pink" />
-                <span className="text-[10px] font-bold uppercase tracking-widest">Refs</span>
+                <span className="max-w-0 group-hover:max-w-[100px] transition-all duration-300 text-[10px] font-bold uppercase tracking-widest overflow-hidden whitespace-nowrap">Refs</span>
               </button>
 
               <button
                 onClick={() => setFocusMode(!focusMode)}
-                className={`p-2 rounded transition-colors ${focusMode ? 'text-flat-cyan bg-flat-cyan/10' : (darkMode ? 'text-white/40 hover:bg-white/5' : 'text-flat-grayLight hover:bg-flat-dark')}`}
-                title="Modo Foco"
+                className={`p-2.5 rounded-xl transition-all hover:scale-110 active:scale-95 ${focusMode ? 'text-flat-cyan bg-flat-cyan/10' : (darkMode ? 'text-white/40 hover:bg-white/5' : 'text-flat-grayLight hover:bg-flat-dark')}`}
+                title="Modo Foco (Ctrl+Alt+F)"
               >
                 <MaterialIcon name={focusMode ? "fullscreen_exit" : "fullscreen"} />
               </button>
@@ -679,6 +835,20 @@ const App: React.FC = () => {
                   </button>
                   <div className={`h-[1px] my-1 mx-4 ${darkMode ? 'bg-white/10' : 'bg-flat-grayDark/20'}`} />
                   <button
+                    onClick={() => exportScript('JSON')}
+                    className={`w-full text-left px-4 py-2.5 text-xs font-bold uppercase tracking-widest flex items-center gap-3 transition-colors ${darkMode ? 'hover:bg-white/5 text-white' : 'hover:bg-flat-grayDark/10 text-flat-black'}`}
+                  >
+                    <MaterialIcon name="data_object" className="text-flat-grayMid text-sm" />
+                    Projeto JSON (Backup)
+                  </button>
+                  <button
+                    onClick={() => exportScript('MARKDOWN')}
+                    className={`w-full text-left px-4 py-2.5 text-xs font-bold uppercase tracking-widest flex items-center gap-3 transition-colors ${darkMode ? 'hover:bg-white/5 text-white' : 'hover:bg-flat-grayDark/10 text-flat-black'}`}
+                  >
+                    <MaterialIcon name="markdown" className="text-flat-cyan text-sm" />
+                    Markdown (.md)
+                  </button>
+                  <button
                     onClick={() => exportScript('FOUNTAIN')}
                     className={`w-full text-left px-4 py-2.5 text-xs font-bold uppercase tracking-widest flex items-center gap-3 transition-colors ${darkMode ? 'hover:bg-white/5 text-white' : 'hover:bg-flat-grayDark/10 text-flat-black'}`}
                   >
@@ -686,11 +856,11 @@ const App: React.FC = () => {
                     Fountain Script
                   </button>
                   <button
-                    onClick={() => exportScript('JSON')}
+                    onClick={() => exportScript('PDF')} // PDF points to Pro Text for now as a text fallback or we can add a specific button
                     className={`w-full text-left px-4 py-2.5 text-xs font-bold uppercase tracking-widest flex items-center gap-3 transition-colors ${darkMode ? 'hover:bg-white/5 text-white' : 'hover:bg-flat-grayDark/10 text-flat-black'}`}
                   >
-                    <MaterialIcon name="data_object" className="text-flat-grayMid text-sm" />
-                    JSON Structured
+                    <MaterialIcon name="description" className="text-flat-pink text-sm" />
+                    Roteiro Profissional (.txt)
                   </button>
                 </div>
               </div>
@@ -701,7 +871,7 @@ const App: React.FC = () => {
         {/* Editor Area */}
         <div
           ref={scrollContainerRef}
-          className={`flex-1 overflow-y-auto p-4 md:p-8 xl:p-12 custom-scrollbar transition-all ${focusMode ? 'max-w-4xl mx-auto w-full' : ''}`}
+          className={`flex-1 overflow-y-auto p-4 md:p-8 xl:p-12 custom-scrollbar transition-all ${focusMode ? 'max-w-[1400px] mx-auto w-full' : ''}`}
         >
           {/* Typing Notification Floating Badge */}
           {isOnline && collaborators.some(c => c.id !== userId && c.isTyping) && (
@@ -757,9 +927,9 @@ const App: React.FC = () => {
               </div>
             </div>
           )}
-          {script.pages.map((page) => (
+          {script.pages.map((page, index) => (
             <div key={page.id} className="mb-20">
-              <div className="flex items-center gap-4 mb-8">
+              <div className="flex items-center justify-between gap-4 mb-8">
                 <div className="h-[2px] flex-1 bg-gradient-to-r from-flat-cyan to-flat-grayDark/20" />
                 <span className="text-flat-cyan font-black text-2xl tracking-widest italic uppercase">PÁGINA {page.number}</span>
                 <div className="h-[2px] flex-1 bg-gradient-to-l from-flat-cyan to-flat-grayDark/20" />
@@ -807,6 +977,14 @@ const App: React.FC = () => {
                   <MaterialIcon name="add" />
                   <span className="font-bold text-sm uppercase tracking-widest">Adicionar Painel</span>
                 </button>
+                <button
+                  onClick={() => insertPageAfter(index)}
+                  className={`flex items-center gap-2 px-6 py-3 border-2 border-dashed rounded-xl transition-all w-full sm:w-auto justify-center shadow-sm ${darkMode ? 'bg-white/5 border-white/10 text-brand-pink/60 hover:border-brand-pink hover:text-brand-pink hover:bg-white/10' : 'bg-white border-flat-grayDark text-flat-grayLight hover:border-brand-pink hover:text-brand-pink hover:bg-brand-pink/5'}`}
+                  title="Inserir Nova Página Abaixo"
+                >
+                  <MaterialIcon name="note_add" />
+                  <span className="font-bold text-sm uppercase tracking-widest">Nova Página Abaixo</span>
+                </button>
               </div>
             </div>
           ))}
@@ -838,10 +1016,10 @@ const App: React.FC = () => {
                     </button>
 
                     {recentProjects.map((proj) => (
-                      <button
+                      <div
                         key={proj.id}
                         onClick={() => loadProject(proj)}
-                        className={`group relative border-2 rounded-2xl p-5 text-left transition-all flex flex-col gap-4 min-h-[160px] ${darkMode ? 'bg-white/5 border-white/40 hover:border-flat-cyan/50 hover:bg-white/10' : 'bg-white border-flat-grayDark/60 hover:border-flat-cyan hover:shadow-xl hover:shadow-flat-cyan/5'}`}
+                        className={`group relative border-2 rounded-2xl p-5 text-left transition-all flex flex-col gap-4 min-h-[160px] cursor-pointer ${darkMode ? 'bg-white/5 border-white/40 hover:border-flat-cyan/50 hover:bg-white/10' : 'bg-white border-flat-grayDark/60 hover:border-flat-cyan hover:shadow-xl hover:shadow-flat-cyan/5'}`}
                       >
                         <div className="flex justify-between items-start">
                           <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${darkMode ? 'bg-white/10 group-hover:bg-flat-cyan/20' : 'bg-flat-dark/30 group-hover:bg-flat-cyan/10'}`}>
@@ -877,7 +1055,7 @@ const App: React.FC = () => {
                           </span>
                           <MaterialIcon name="north_east" className="text-[10px] text-flat-cyan opacity-0 group-hover:opacity-100 transform translate-y-1 group-hover:translate-y-0 transition-all" />
                         </div>
-                      </button>
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -908,19 +1086,24 @@ const App: React.FC = () => {
         </footer>
       </main>
 
-      {showPreview && (
-        <ScriptPreview
-          script={script}
-          onClose={() => setShowPreview(false)}
-        />
-      )}
+      {
+        showPreview && (
+          <ScriptPreview
+            script={script}
+            onClose={() => setShowPreview(false)}
+            onExport={exportScript}
+          />
+        )
+      }
 
-      {showRefsPreview && (
-        <ReferencePreview
-          script={script}
-          onClose={() => setShowRefsPreview(false)}
-        />
-      )}
+      {
+        showRefsPreview && (
+          <ReferencePreview
+            script={script}
+            onClose={() => setShowRefsPreview(false)}
+          />
+        )
+      }
 
       <div className="print:hidden">
         <AIChatSidebar
@@ -931,38 +1114,57 @@ const App: React.FC = () => {
         />
       </div>
 
+      {
+        showChat && script.roomId && (
+          <div className="fixed inset-y-0 right-0 z-50 flex print:hidden">
+            <CollaborationChat
+              roomId={script.roomId}
+              userId={userId}
+              userName={userName}
+              userColor={userColorRef.current}
+              darkMode={darkMode}
+              onClose={() => setShowChat(false)}
+              onShowAlert={showAlert}
+              onShowConfirm={showConfirm}
+            />
+          </div>
+        )
+      }
+
       <div className="print:hidden">
         <CustomModal {...modalConfig} />
       </div>
 
       {/* PWA Install Button (Floating) */}
-      {deferredPrompt && (
-        <div className="fixed bottom-6 right-6 z-[100] animate-bounce-subtle print:hidden group">
-          <button
-            onClick={async () => {
-              if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                if (outcome === 'accepted') {
-                  setDeferredPrompt(null);
+      {
+        deferredPrompt && (
+          <div className="fixed bottom-6 right-6 z-[100] animate-bounce-subtle print:hidden group">
+            <button
+              onClick={async () => {
+                if (deferredPrompt) {
+                  deferredPrompt.prompt();
+                  const { outcome } = await deferredPrompt.userChoice;
+                  if (outcome === 'accepted') {
+                    setDeferredPrompt(null);
+                  }
                 }
-              }
-            }}
-            className="flex items-center gap-2 px-6 py-3 bg-brand-cyan text-white rounded-full shadow-2xl hover:scale-105 active:scale-95 transition-all font-black text-xs uppercase tracking-widest ring-4 ring-brand-cyan/20 border border-white/20"
-          >
-            <MaterialIcon name="install_desktop" className="text-lg" />
-            <span>Instalar Desktop</span>
+              }}
+              className="flex items-center gap-2 px-6 py-3 bg-brand-cyan text-white rounded-full shadow-2xl hover:scale-105 active:scale-95 transition-all font-black text-xs uppercase tracking-widest ring-4 ring-brand-cyan/20 border border-white/20"
+            >
+              <MaterialIcon name="install_desktop" className="text-lg" />
+              <span>Instalar Desktop</span>
 
-            {/* Tooltip */}
-            <div className="absolute bottom-full right-0 mb-3 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-              <div className="bg-brand-dark text-white text-[10px] px-3 py-2 rounded-xl shadow-2xl whitespace-nowrap font-bold border border-white/10">
-                Ter acesso rápido e usar offline 🚀
-                <div className="absolute top-full right-6 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-brand-dark" />
+              {/* Tooltip */}
+              <div className="absolute bottom-full right-0 mb-3 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                <div className="bg-brand-dark text-white text-[10px] px-3 py-2 rounded-xl shadow-2xl whitespace-nowrap font-bold border border-white/10">
+                  Ter acesso rápido e usar offline 🚀
+                  <div className="absolute top-full right-6 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-brand-dark" />
+                </div>
               </div>
-            </div>
-          </button>
-        </div>
-      )}
+            </button>
+          </div>
+        )
+      }
 
       <style dangerouslySetInnerHTML={{
         __html: `
@@ -980,6 +1182,13 @@ const App: React.FC = () => {
           background: #00B5E2;
         }
       `}} />
+      <StoryFoundation
+        isOpen={showFoundation}
+        onClose={() => setShowFoundation(false)}
+        script={script}
+        onUpdate={(data) => setScript(prev => ({ ...prev, ...data }))}
+        darkMode={darkMode}
+      />
     </div>
   );
 };

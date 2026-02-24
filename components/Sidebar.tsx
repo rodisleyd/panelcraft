@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { ScriptData, PageData, PanelData } from '../types';
 import { MaterialIcon } from '../constants';
+import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 
 interface SidebarProps {
   script: ScriptData;
@@ -15,6 +16,9 @@ interface SidebarProps {
   onImport: () => void;
   onNewScript: () => void;
   onClose?: () => void;
+  collapsed: boolean;
+  darkMode: boolean;
+  onReorderPages: (startIndex: number, endIndex: number) => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -28,25 +32,30 @@ const Sidebar: React.FC<SidebarProps> = ({
   onRemoveCharacter,
   onImport,
   onNewScript,
-  onClose
+  onClose,
+  collapsed,
+  darkMode,
+  onReorderPages
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredPages = script.pages.filter(page => {
     if (!searchTerm) return true;
 
+    const normalize = (str: string) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    const searchLower = normalize(searchTerm);
+
     // Busca por número de página
-    const searchLower = searchTerm.toLowerCase();
     if (page.number.toString().includes(searchLower)) return true;
-    if (`pagina ${page.number}`.includes(searchLower)) return true;
-    if (`pág ${page.number}`.includes(searchLower)) return true;
+    if (normalize(`pagina ${page.number}`).includes(searchLower)) return true;
+    if (normalize(`pag ${page.number}`).includes(searchLower)) return true;
 
     // Busca dentro dos painéis (ação e diálogos)
     return page.panels.some(panel =>
-      panel.action.toLowerCase().includes(searchLower) ||
+      normalize(panel.action).includes(searchLower) ||
       panel.dialogues.some(d =>
-        d.character.toLowerCase().includes(searchLower) ||
-        d.text.toLowerCase().includes(searchLower)
+        normalize(d.character).includes(searchLower) ||
+        normalize(d.text).includes(searchLower)
       )
     );
   });
@@ -102,39 +111,86 @@ const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       <div className="flex-1 overflow-y-auto p-2 space-y-4 custom-scrollbar">
-        {filteredPages.map((page) => (
-          <div key={page.id} className="space-y-1">
-            <div className="flex items-center justify-between px-3 py-2 bg-brand-pink/10 dark:bg-brand-pink/5 rounded-xl group border border-brand-pink/20 dark:border-brand-pink/10">
-              <span className="text-[10px] font-black text-brand-pink dark:text-brand-pink uppercase tracking-tighter">Página {page.number}</span>
-              <button
-                onClick={() => onRemovePage(page.id)}
-                className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:text-brand-pink text-flat-grayMid"
-              >
-                <MaterialIcon name="delete" className="text-xs" />
-              </button>
-            </div>
+        <DragDropContext
+          onDragEnd={(result: DropResult) => {
+            if (!result.destination) return;
+            if (result.source.index === result.destination.index) return;
+            // A pesquisa altera o índice visual em relação ao índice real do array `script.pages`.
+            // Para ser robusto, o drag and drop idealmente deve ser desativado durante a busca
+            // ou deve mapear o ID arrastado para o índice real em `script`.
+            // Para simplificar e evitar bugs, não permitiremos arrastar quando houver busca ativa.
+            if (searchTerm) return;
 
-            <div className="pl-4 space-y-1">
-              {page.panels.map((panel, idx) => (
-                <button
-                  key={panel.id}
-                  onClick={() => {
-                    onSelectPanel(panel.id);
-                    // No mobile, fecha a sidebar ao selecionar
-                    if (window.innerWidth < 1280 && onClose) onClose();
-                  }}
-                  className={`w-full text-left px-4 py-3 rounded-xl text-sm transition-all flex items-center gap-3 group border border-transparent ${activePanelId === panel.id
-                    ? 'bg-brand-dark dark:bg-flat-cyan text-white shadow-xl shadow-brand-dark/10'
-                    : 'text-flat-grayLight dark:text-white/60 hover:bg-white dark:hover:bg-white/5 hover:border-flat-grayDark/50 dark:hover:border-white/10 hover:shadow-sm'
-                    }`}
-                >
-                  <MaterialIcon name="view_quilt" className={`text-sm ${activePanelId === panel.id ? 'text-brand-cyan dark:text-white' : 'text-flat-grayMid group-hover:text-brand-cyan'}`} />
-                  <span className="truncate font-semibold uppercase tracking-tight text-[11px]">Painel {idx + 1}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        ))}
+            onReorderPages(result.source.index, result.destination.index);
+          }}
+        >
+          <Droppable droppableId="sidebar-pages" isDropDisabled={!!searchTerm}>
+            {(provided) => (
+              <div
+                {...provided.droppableProps}
+                ref={provided.innerRef}
+                className="space-y-4"
+              >
+                {filteredPages.map((page, index) => (
+                  <Draggable
+                    key={page.id}
+                    draggableId={page.id}
+                    index={index}
+                    isDragDisabled={!!searchTerm}
+                  >
+                    {(provided, snapshot) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        className={`space-y-1 ${snapshot.isDragging ? 'opacity-80 scale-[1.02] z-50' : ''}`}
+                      >
+                        <div className="flex items-center justify-between px-3 py-2 bg-brand-pink/10 dark:bg-brand-pink/5 rounded-xl group border border-brand-pink/20 dark:border-brand-pink/10">
+                          <div className="flex items-center gap-2">
+                            <div
+                              {...provided.dragHandleProps}
+                              className="cursor-grab hover:text-brand-cyan text-flat-grayMid rounded transition-colors"
+                              title="Arraste para reordenar"
+                            >
+                              <MaterialIcon name="drag_indicator" className="text-sm" />
+                            </div>
+                            <span className="text-[10px] font-black text-brand-pink uppercase tracking-tighter">Página {page.number}</span>
+                          </div>
+                          <button
+                            onClick={() => onRemovePage(page.id)}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:text-brand-pink text-flat-grayMid"
+                          >
+                            <MaterialIcon name="delete" className="text-xs" />
+                          </button>
+                        </div>
+
+                        <div className="pl-4 space-y-1">
+                          {page.panels.map((panel, idx) => (
+                            <button
+                              key={panel.id}
+                              onClick={() => {
+                                onSelectPanel(panel.id);
+                                // No mobile, fecha a sidebar ao selecionar
+                                if (window.innerWidth < 1280 && onClose) onClose();
+                              }}
+                              className={`w-full text-left px-4 py-3 rounded-xl text-sm transition-all flex items-center gap-3 group border border-transparent ${activePanelId === panel.id
+                                ? 'bg-brand-dark dark:bg-flat-cyan text-white shadow-xl shadow-brand-dark/10'
+                                : 'text-flat-grayLight dark:text-white/60 hover:bg-white dark:hover:bg-white/5 hover:border-flat-grayDark/50 dark:hover:border-white/10 hover:shadow-sm'
+                                }`}
+                            >
+                              <MaterialIcon name="view_quilt" className={`text-sm ${activePanelId === panel.id ? 'text-brand-cyan dark:text-white' : 'text-flat-grayMid group-hover:text-brand-cyan'}`} />
+                              <span className="truncate font-semibold uppercase tracking-tight text-[11px]">Painel {idx + 1}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </Draggable>
+                ))}
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
+        </DragDropContext>
 
         {filteredPages.length === 0 && (
           <div className="text-center py-12 px-4 animate-fade-in">

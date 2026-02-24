@@ -1,7 +1,7 @@
 
 import { initializeApp } from 'firebase/app';
-import { getDatabase, ref, onValue, set, onDisconnect, serverTimestamp, off } from 'firebase/database';
-import { ScriptData } from '../types';
+import { getDatabase, ref, onValue, set, onDisconnect, serverTimestamp, off, push, update, remove } from 'firebase/database';
+import { ScriptData, ChatMessage } from '../types';
 
 const firebaseConfig = {
     apiKey: (import.meta as any).env?.VITE_FIREBASE_API_KEY || '',
@@ -95,4 +95,66 @@ export const leaveRoom = (userId?: string) => {
     }
 
     currentRoomId = null;
+};
+
+export const subscribeToMessages = (roomId: string, callback: (messages: ChatMessage[]) => void) => {
+    if (!db) return;
+    const messagesRef = ref(db, `rooms/${roomId}/messages`);
+    onValue(messagesRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            callback(Object.values(data));
+        } else {
+            callback([]);
+        }
+    });
+};
+
+export const sendChatMessage = async (roomId: string, message: Omit<ChatMessage, 'id' | 'timestamp'>) => {
+    if (!db) throw new Error("Database not initialized");
+
+    try {
+        const messagesRef = ref(db, `rooms/${roomId}/messages`);
+        const newMessageRef = push(messagesRef);
+
+        const messageData: any = {
+            ...message,
+            id: newMessageRef.key,
+            timestamp: serverTimestamp()
+        };
+
+        // Firebase Realtime Database does not allow undefined values
+        if (messageData.image === undefined) delete messageData.image;
+
+        await set(newMessageRef, messageData);
+    } catch (error) {
+        console.error("Firebase Chat Send Error:", error);
+        throw error;
+    }
+};
+
+export const updateChatMessage = async (roomId: string, messageId: string, text: string) => {
+    if (!db) throw new Error("Database not initialized");
+    try {
+        const messageRef = ref(db, `rooms/${roomId}/messages/${messageId}`);
+        await update(messageRef, {
+            text,
+            edited: true,
+            editedAt: serverTimestamp()
+        });
+    } catch (error) {
+        console.error("Firebase Chat Update Error:", error);
+        throw error;
+    }
+};
+
+export const deleteChatMessage = async (roomId: string, messageId: string) => {
+    if (!db) throw new Error("Database not initialized");
+    try {
+        const messageRef = ref(db, `rooms/${roomId}/messages/${messageId}`);
+        await remove(messageRef);
+    } catch (error) {
+        console.error("Firebase Chat Delete Error:", error);
+        throw error;
+    }
 };

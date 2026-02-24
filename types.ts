@@ -33,13 +33,20 @@ export interface Character {
   description?: string;
 }
 
+export interface Beat {
+  page: number;
+  content: string;
+}
+
 export interface ScriptData {
   id: string;
   title: string;
   author: string;
-  treatment?: string;
+  treatment?: string; // Argumento (Story Foundation)
+  trt?: string; // Short version tag in header
   characters: any[];
   pages: PageData[];
+  outline?: Beat[]; // Escaleta
   roomId?: string;
   lastModified?: number;
 }
@@ -52,4 +59,16 @@ export interface Collaborator {
   isTyping?: boolean;
 }
 
-export type ExportFormat = 'PDF' | 'FOUNTAIN' | 'JSON';
+export interface ChatMessage {
+  id: string;
+  userId: string;
+  userName: string;
+  userColor: string;
+  text: string;
+  timestamp: number;
+  image?: string;
+  edited?: boolean;
+  editedAt?: number;
+}
+
+export type ExportFormat = 'PDF' | 'FOUNTAIN' | 'JSON' | 'MARKDOWN';

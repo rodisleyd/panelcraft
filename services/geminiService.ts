@@ -35,7 +35,8 @@ export const getAIChatResponse = async (messages: ChatMessage[], script: ScriptD
     Contexto do Roteiro Atual:
     Título: ${script.title}
     Autor: ${script.author}
-    Tratamento: ${script.treatment}
+    Tratamento/Argumento: ${script.treatment || 'Não definido'}
+    Escaleta (Outline): ${script.outline?.map(b => `Pág ${b.page}: ${b.content}`).join('\n') || 'Não definida'}
     Personagens: ${script.characters.map(c => c.name).join(', ')}
 
     ${formatFullScriptContent(script)}
@@ -145,5 +146,50 @@ export const suggestNewPanel = async (previousContext: string, characters: strin
   } catch (error) {
     console.error("Gemini Suggest Error:", error);
     return null;
+  }
+};
+
+export const generateOutlineFromTreatment = async (treatment: string, totalPages: number) => {
+  if (!apiKey) throw new Error("API Key missing");
+
+  const systemInstruction = `Você é um editor sênior de quadrinhos. 
+  Sua tarefa é ler o argumento (tratamento) fornecido e decupá-lo em uma escaleta de ${totalPages} páginas.
+  Seja visual e focado no ritmo narrativo.
+  Retorne um JSON estruturado com o campo 'outline' que seja uma array de objetos { page: number, content: string }.`;
+
+  try {
+    const response = await (ai as any).models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: `Gere uma escaleta de ${totalPages} páginas para este argumento: "${treatment}"`,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            outline: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  page: { type: Type.NUMBER },
+                  content: { type: Type.STRING }
+                },
+                required: ["page", "content"]
+              }
+            }
+          },
+          required: ["outline"]
+        },
+        systemInstruction,
+        temperature: 0.7
+      }
+    });
+
+    const jsonStr = response.text;
+    if (!jsonStr) return null;
+    return JSON.parse(jsonStr.trim());
+  } catch (error) {
+    console.error("Gemini Outline Error:", error);
+    throw error;
   }
 };

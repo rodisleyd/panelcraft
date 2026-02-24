@@ -13,6 +13,13 @@
   .panel-card {
     @apply bg-white dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/10 shadow-[0_8px_30px_rgb(0, 0, 0, 0.04)] transition-all duration-300 hover:shadow-[0_8px_30_px_rgb(0, 0, 0, 0.08)];
   }
+
+  .material-symbols-outlined {
+    text-transform: none !important;
+    font-style: normal !important;
+    font-variant: normal !important;
+    line-height: 1 !important;
+  }
 }
 
 .custom-scrollbar::-webkit-scrollbar {

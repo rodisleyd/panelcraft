@@ -10,6 +10,8 @@ interface CollaborationMenuProps {
     userId: string;
     onToggleOnline: () => void;
     onUpdateName: (name: string) => void;
+    onToggleChat: () => void;
+    showChat: boolean;
 }
 
 const CollaborationMenu: React.FC<CollaborationMenuProps> = ({
@@ -19,7 +21,9 @@ const CollaborationMenu: React.FC<CollaborationMenuProps> = ({
     currentUserName,
     userId,
     onToggleOnline,
-    onUpdateName
+    onUpdateName,
+    onToggleChat,
+    showChat
 }) => {
     const [copied, setCopied] = useState(false);
     const [isEditingName, setIsEditingName] = useState(false);
@@ -106,6 +110,17 @@ const CollaborationMenu: React.FC<CollaborationMenuProps> = ({
                     >
                         <MaterialIcon name={copied ? "check" : "share"} className="text-sm" />
                         <span className="hidden lg:inline">{copied ? "LINK COPIADO" : "ENVIAR LINK"}</span>
+                    </button>
+
+                    <button
+                        onClick={onToggleChat}
+                        className={`p-1.5 transition-colors border rounded-lg shadow-sm ${showChat
+                            ? 'bg-brand-cyan text-white border-brand-cyan'
+                            : 'text-flat-grayMid dark:text-white/40 hover:text-brand-cyan bg-white dark:bg-white/5 border-flat-grayDark dark:border-white/10'
+                            }`}
+                        title={showChat ? "Fechar Chat" : "Abrir Chat"}
+                    >
+                        <MaterialIcon name="forum" className="text-sm" />
                     </button>
 
                     <button

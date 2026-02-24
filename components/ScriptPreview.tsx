@@ -1,14 +1,15 @@
 
 import React from 'react';
-import { ScriptData } from '../types';
+import { ScriptData, ExportFormat } from '../types';
 import { MaterialIcon } from '../constants';
 
 interface ScriptPreviewProps {
     script: ScriptData;
     onClose: () => void;
+    onExport: (format: ExportFormat) => void;
 }
 
-const ScriptPreview: React.FC<ScriptPreviewProps> = ({ script, onClose }) => {
+const ScriptPreview: React.FC<ScriptPreviewProps> = ({ script, onClose, onExport }) => {
     const handlePrint = () => {
         window.print();
     };
@@ -25,11 +26,27 @@ const ScriptPreview: React.FC<ScriptPreviewProps> = ({ script, onClose }) => {
                     <div className="flex items-center gap-2 md:gap-4">
                         <button
                             onClick={handlePrint}
-                            className="flex items-center gap-2 px-3 md:px-6 py-1.5 md:py-2 bg-brand-cyan text-white rounded-lg hover:bg-brand-dark dark:hover:bg-flat-cyan transition-all font-black text-[10px] md:text-xs uppercase tracking-widest shadow-lg shadow-brand-cyan/20"
+                            className="flex items-center gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-brand-cyan text-white rounded-lg hover:bg-brand-dark transition-all font-black text-[10px] md:text-xs uppercase tracking-widest shadow-lg shadow-brand-cyan/20"
+                            title="Imprimir ou Salvar PDF"
                         >
-                            <MaterialIcon name="download" className="text-xs md:text-sm" />
-                            <span className="hidden sm:inline">Baixar PDF</span>
-                            <span className="sm:hidden">PDF</span>
+                            <MaterialIcon name="picture_as_pdf" className="text-xs md:text-sm" />
+                            <span className="hidden sm:inline">PDF</span>
+                        </button>
+                        <button
+                            onClick={() => onExport('MARKDOWN')}
+                            className="flex items-center gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-white dark:bg-white/5 border border-flat-grayDark dark:border-white/10 text-flat-black dark:text-white rounded-lg hover:bg-flat-dark dark:hover:bg-white/10 transition-all font-black text-[10px] md:text-xs uppercase tracking-widest"
+                            title="Exportar Markdown"
+                        >
+                            <MaterialIcon name="markdown" className="text-xs md:text-sm text-flat-cyan" />
+                            <span className="hidden sm:inline">MD</span>
+                        </button>
+                        <button
+                            onClick={() => onExport('PDF')} // Using 'PDF' format for Pro Text export
+                            className="flex items-center gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-white dark:bg-white/5 border border-flat-grayDark dark:border-white/10 text-flat-black dark:text-white rounded-lg hover:bg-flat-dark dark:hover:bg-white/10 transition-all font-black text-[10px] md:text-xs uppercase tracking-widest"
+                            title="Exportar Texto Profissional"
+                        >
+                            <MaterialIcon name="description" className="text-xs md:text-sm text-brand-pink" />
+                            <span className="hidden sm:inline">TXT</span>
                         </button>
                         <button
                             onClick={onClose}
@@ -53,9 +70,9 @@ const ScriptPreview: React.FC<ScriptPreviewProps> = ({ script, onClose }) => {
                                 {pageIdx === 0 && (
                                     <>
                                         <div className="flex justify-between items-start mb-12">
-                                            <img src="https://i.ibb.co/LD0gPkTn/LOGO-PANELCRAFT-NOVO-PSITIVO.png" alt="PanelCraft" className="h-8 w-auto object-contain mb-2 print:h-10" />
+                                            <img src="/logo-light-1.5.png" alt="PanelCraft" className="h-8 w-auto object-contain mb-2 print:h-10" />
                                             <div className="text-right">
-                                                <span className="text-[12px] font-medium text-gray-500 italic">{script.treatment || 'Tratamento 1'}</span>
+                                                <span className="text-[12px] font-medium text-gray-500 italic">{script.trt || 'v1.0'}</span>
                                             </div>
                                         </div>
 
@@ -90,21 +107,21 @@ const ScriptPreview: React.FC<ScriptPreviewProps> = ({ script, onClose }) => {
                                             {/* Table Structure */}
                                             <div className="grid grid-cols-3 border-x border-b border-black divide-x divide-black min-h-[120px]">
                                                 {/* ACTION */}
-                                                <div className="flex flex-col">
+                                                <div className="flex flex-col overflow-hidden">
                                                     <div className="bg-[#D9D9D9] px-3 py-1 text-[11px] font-bold uppercase tracking-tight border-b border-black">
                                                         Ação
                                                     </div>
-                                                    <div className="p-3 text-[12px] leading-relaxed font-medium">
+                                                    <div className="p-3 text-[12px] leading-relaxed font-medium break-all md:break-words">
                                                         {panel.action || '-'}
                                                     </div>
                                                 </div>
 
                                                 {/* DIALOGUES */}
-                                                <div className="flex flex-col">
+                                                <div className="flex flex-col overflow-hidden">
                                                     <div className="bg-[#D9D9D9] px-3 py-1 text-[11px] font-bold uppercase tracking-tight border-b border-black">
                                                         Diálogos
                                                     </div>
-                                                    <div className="p-3 space-y-3 font-medium">
+                                                    <div className="p-3 space-y-3 font-medium break-all md:break-words">
                                                         {panel.dialogues.map((d) => (
                                                             <div key={d.id} className="text-[12px]">
                                                                 <span className="font-bold">{d.character}: </span>
@@ -116,11 +133,11 @@ const ScriptPreview: React.FC<ScriptPreviewProps> = ({ script, onClose }) => {
                                                 </div>
 
                                                 {/* CAPTIONS */}
-                                                <div className="flex flex-col">
+                                                <div className="flex flex-col overflow-hidden">
                                                     <div className="bg-[#D9D9D9] px-3 py-1 text-[11px] font-bold uppercase tracking-tight border-b border-black">
                                                         Legendas
                                                     </div>
-                                                    <div className="p-3 text-[12px] italic leading-relaxed font-medium">
+                                                    <div className="p-3 text-[12px] italic leading-relaxed font-medium break-all md:break-words">
                                                         {panel.captions || '-'}
                                                     </div>
                                                 </div>
