@@ -36,7 +36,7 @@ const ReferencePreview: React.FC<ReferencePreviewProps> = ({ script, onClose }) 
                     <div className="flex items-center gap-3">
                         <button
                             onClick={handlePrint}
-                            className="flex items-center gap-2 px-4 py-2 bg-flat-dark dark:bg-white/10 text-white rounded-lg hover:bg-brand-dark dark:hover:bg-white/20 transition-all font-black text-[10px] uppercase tracking-widest"
+                            className="flex items-center gap-2 px-4 py-2 bg-brand-dark dark:bg-white/10 text-white rounded-lg hover:bg-flat-black dark:hover:bg-white/20 transition-all font-black text-[10px] uppercase tracking-widest"
                         >
                             <MaterialIcon name="print" className="text-sm" />
                             Imprimir
@@ -184,9 +184,13 @@ const ReferencePreview: React.FC<ReferencePreviewProps> = ({ script, onClose }) 
             break-inside: avoid;
             display: block;
             position: relative;
-            margin-bottom: 25px;
+            margin-bottom: 40px;
+            padding-top: 15mm; /* Important for breathing room on new pages */
             width: 100%;
           }
+          
+          /* The first element shouldn't have too much extra top padding because the header already has it, 
+             but for safety in all-pages flow, 15mm is a good standard "respiro" */
 
           img {
             max-width: 100% !important;
