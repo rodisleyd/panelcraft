@@ -199,7 +199,7 @@ const ReferencePreview: React.FC<ReferencePreviewProps> = ({ script, onClose }) 
             height: 40px !important;
             width: auto !important;
             max-width: 200px !important;
-            margin-bottom: 10px !important;
+            margin-bottom: 25px !important;
           }
 
           /* Convert grid to single column for print stability */
