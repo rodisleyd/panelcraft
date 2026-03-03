@@ -36,7 +36,7 @@ const ReferencePreview: React.FC<ReferencePreviewProps> = ({ script, onClose }) 
                     <div className="flex items-center gap-3">
                         <button
                             onClick={handlePrint}
-                            className="flex items-center gap-2 px-4 py-2 bg-brand-dark dark:bg-white/10 text-white rounded-lg hover:bg-flat-black dark:hover:bg-white/20 transition-all font-black text-[10px] uppercase tracking-widest"
+                            className="flex items-center gap-2 px-4 py-2 bg-brand-dark text-white rounded-lg hover:bg-black transition-all font-black text-[10px] uppercase tracking-widest"
                         >
                             <MaterialIcon name="print" className="text-sm" />
                             Imprimir
@@ -131,67 +131,60 @@ const ReferencePreview: React.FC<ReferencePreviewProps> = ({ script, onClose }) 
         @media print {
           @page {
             size: A4;
-            margin: 10mm; /* Narrower margins to maximize space */
+            margin: 15mm;
           }
           
-          /* Ensure HTML and Body allow for multiple pages */
           html, body {
             height: auto !important;
-            min-height: 0 !important;
             overflow: visible !important;
+            background: white !important;
             margin: 0 !important;
             padding: 0 !important;
-            padding-top: 10mm !important; /* Safety margin for top of page */
-            background: white !important;
           }
 
-          /* Ensure the root and direct children don't clip content */
-          #root, #root > div {
-            height: auto !important;
-            overflow: visible !important;
-            display: block !important;
-          }
-
-          /* Hide everything that isn't the ReferencePreview */
-          .print\\:hidden, 
-          header, 
-          aside, 
-          main,
-          footer {
-            display: none !important;
-          }
-
-          /* Force ReferencePreview to be visible and flow naturally */
+          /* Reset fixed container for print */
           .fixed.inset-0.z-50 {
             position: static !important;
             display: block !important;
-            height: auto !important;
-            overflow: visible !important;
             background: white !important;
             width: 100% !important;
+            height: auto !important;
           }
 
-          .relative.w-full.h-full {
+          /* Hide UI elements */
+          .print\\:hidden, 
+          .sticky {
+            display: none !important;
+          }
+
+          /* Ensure content expands */
+          .relative.w-full.max-w-5xl {
+             max-width: none !important;
              height: auto !important;
              overflow: visible !important;
-             max-width: none !important;
              border: none !important;
-             display: block !important;
-             background: white !important;
+             box-shadow: none !important;
+          }
+
+          .overflow-y-auto {
+            overflow: visible !important;
+            height: auto !important;
+          }
+
+          .bg-white.shadow-2xl {
+            width: 100% !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
           }
 
           .page-break-content {
             page-break-inside: avoid;
             break-inside: avoid;
             display: block;
-            position: relative;
-            margin-bottom: 40px;
-            padding-top: 15mm; /* Important for breathing room on new pages */
-            width: 100%;
+            margin-bottom: 30px;
+            padding-top: 10px;
           }
-          
-          /* The first element shouldn't have too much extra top padding because the header already has it, 
-             but for safety in all-pages flow, 15mm is a good standard "respiro" */
 
           img {
             max-width: 100% !important;
@@ -199,15 +192,12 @@ const ReferencePreview: React.FC<ReferencePreviewProps> = ({ script, onClose }) 
             display: block;
             page-break-inside: avoid;
           }
-          /* Fix for giant logo */
+
           .logo-print {
             height: 40px !important;
-            width: auto !important;
-            max-width: 200px !important;
-            margin-bottom: 25px !important;
+            margin-bottom: 20px !important;
           }
 
-          /* Convert grid to single column for print stability */
           .grid {
             display: block !important;
           }
