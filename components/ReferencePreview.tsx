@@ -25,8 +25,8 @@ const ReferencePreview: React.FC<ReferencePreviewProps> = ({ script, onClose }) 
     );
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-brand-dark/95 backdrop-blur-sm animate-fade-in print:bg-white print:p-0">
-            <div className="relative w-full h-full max-w-5xl bg-gray-100 dark:bg-brand-dark flex flex-col md:my-4 md:h-[95vh] md:rounded-2xl overflow-hidden border border-white/20 dark:border-white/10 print:m-0 print:h-auto print:rounded-none print:shadow-none print:border-none transition-colors duration-300">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-brand-dark/95 backdrop-blur-sm animate-fade-in print:bg-white print:static print:block print:inset-auto">
+            <div className="relative w-full h-full max-w-5xl bg-gray-100 dark:bg-brand-dark flex flex-col md:my-4 md:h-[95vh] md:rounded-2xl overflow-hidden border border-white/20 dark:border-white/10 print:m-0 print:h-auto print:rounded-none print:shadow-none print:border-none print:block print:w-full transition-colors duration-300">
                 {/* Top bar - Hidden on print */}
                 <div className="px-8 py-4 border-b border-flat-grayDark/50 dark:border-white/10 flex items-center justify-between bg-white dark:bg-brand-dark sticky top-0 z-20 print:hidden">
                     <div className="flex items-center gap-3">
@@ -58,26 +58,26 @@ const ReferencePreview: React.FC<ReferencePreviewProps> = ({ script, onClose }) 
                 </div>
 
                 {/* Paper Content */}
-                <div className="flex-1 overflow-y-auto p-4 md:p-12 bg-gray-200 dark:bg-black/20 custom-scrollbar print:p-0 print:bg-white print:overflow-visible flex flex-col items-center">
-                    <div className="bg-white shadow-2xl w-[210mm] min-h-[297mm] p-[20mm] text-black font-sans leading-normal print:shadow-none print:p-10 print:w-full">
+                <div className="flex-1 overflow-y-auto p-4 md:p-12 bg-gray-200 dark:bg-black/20 custom-scrollbar print:p-0 print:bg-white print:overflow-visible print:block print:h-auto print:static print:w-full">
+                    <div className="bg-white shadow-2xl w-[210mm] min-h-[297mm] p-[20mm] text-black font-sans leading-normal print:shadow-none print:p-8 print:w-full print:min-h-0 print:h-auto print:block print:static print:mx-0">
 
                         {/* Header */}
                         <div className="flex justify-between items-start mb-8 border-b-2 border-black pb-4">
                             <div>
-                                <img src="/logo-light-1.5.png" alt="PanelCraft" className="h-8 w-auto object-contain mb-2" />
+                                <img src="/logo-light-1.5.png" alt="PanelCraft" className="h-8 w-auto object-contain mb-2 logo-print" />
                                 <h1 className="text-2xl font-black uppercase tracking-tight">Guia de Referências Visuais</h1>
                             </div>
                             <div className="text-right flex flex-col items-end">
                                 <span className="text-[14px] font-bold uppercase text-brand-cyan">{script.title || 'PROJETO SEM TÍTULO'}</span>
-                                <span className="text-[10px] font-medium text-gray-500 italic">{script.treatment || 'Tratamento 1'}</span>
+                                <span className="text-[10px] font-medium text-gray-500 italic">{script.trt || 'v1.5'}</span>
                             </div>
                         </div>
 
                         {panelsWithRefs.length > 0 ? (
-                            <div className="space-y-12">
+                            <div className="space-y-12 print:space-y-8">
                                 {panelsWithRefs.map((panel, pIdx) => (
-                                    <div key={panel.id} className="page-break-content">
-                                        <div className="bg-flat-dark/10 p-2 mb-4 flex items-center justify-between border-l-4 border-black">
+                                    <div key={panel.id} className="page-break-content mb-8 print:mb-12">
+                                        <div className="bg-black/5 p-2 mb-4 flex items-center justify-between border-l-4 border-black print:bg-gray-100">
                                             <span className="font-black text-xs uppercase tracking-widest">
                                                 Página {panel.pageNumber} — Painel {panel.panelNumber}
                                             </span>
@@ -86,11 +86,11 @@ const ReferencePreview: React.FC<ReferencePreviewProps> = ({ script, onClose }) 
                                             </span>
                                         </div>
 
-                                        <div className="grid grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-2 gap-4 print:gap-6">
                                             {panel.references?.map((ref) => (
-                                                <div key={ref.id} className="border border-gray-200 rounded-lg overflow-hidden flex flex-col bg-gray-50">
+                                                <div key={ref.id} className="border border-gray-200 rounded-lg overflow-hidden flex flex-col bg-gray-50 print:break-inside-avoid shadow-sm">
                                                     {ref.type === 'image' ? (
-                                                        <img src={ref.value} alt="Reference" className="w-full h-auto object-contain bg-white" />
+                                                        <img src={ref.value} alt="Reference" className="w-full h-auto object-contain bg-white min-h-[150px]" />
                                                     ) : (
                                                         <div className="p-8 flex flex-col items-center justify-center text-center">
                                                             <MaterialIcon name="link" className="text-brand-cyan text-4xl mb-2" />
@@ -118,7 +118,7 @@ const ReferencePreview: React.FC<ReferencePreviewProps> = ({ script, onClose }) 
                             </div>
                         )}
 
-                        <div className="mt-20 pt-8 border-t border-gray-100 flex justify-between items-center opacity-30">
+                        <div className="mt-20 pt-8 border-t border-gray-100 flex justify-between items-center opacity-30 print:mt-10">
                             <span className="text-[9px] font-bold uppercase tracking-widest">© PanelCraft — Guia Técnico do Desenhista</span>
                             <span className="text-[9px] font-bold uppercase tracking-widest">Fim do Documento</span>
                         </div>
@@ -131,15 +131,86 @@ const ReferencePreview: React.FC<ReferencePreviewProps> = ({ script, onClose }) 
         @media print {
           @page {
             size: A4;
-            margin: 0;
+            margin: 10mm; /* Narrower margins to maximize space */
           }
-          body {
-            margin: 0;
+          
+          /* Ensure HTML and Body allow for multiple pages */
+          html, body {
+            height: auto !important;
+            min-height: 0 !important;
+            overflow: visible !important;
+            margin: 0 !important;
+            padding: 0 !important;
             background: white !important;
           }
+
+          /* Ensure the root and direct children don't clip content */
+          #root, #root > div {
+            height: auto !important;
+            overflow: visible !important;
+            display: block !important;
+          }
+
+          /* Hide everything that isn't the ReferencePreview */
+          .print\\:hidden, 
+          header, 
+          aside, 
+          main,
+          footer {
+            display: none !important;
+          }
+
+          /* Force ReferencePreview to be visible and flow naturally */
+          .fixed.inset-0.z-50 {
+            position: static !important;
+            display: block !important;
+            height: auto !important;
+            overflow: visible !important;
+            background: white !important;
+            width: 100% !important;
+          }
+
+          .relative.w-full.h-full {
+             height: auto !important;
+             overflow: visible !important;
+             max-width: none !important;
+             border: none !important;
+             display: block !important;
+             background: white !important;
+          }
+
           .page-break-content {
             page-break-inside: avoid;
             break-inside: avoid;
+            display: block;
+            position: relative;
+            margin-bottom: 25px;
+            width: 100%;
+          }
+
+          img {
+            max-width: 100% !important;
+            height: auto !important;
+            display: block;
+            page-break-inside: avoid;
+          }
+          /* Fix for giant logo */
+          .logo-print {
+            height: 40px !important;
+            width: auto !important;
+            max-width: 200px !important;
+            margin-bottom: 10px !important;
+          }
+
+          /* Convert grid to single column for print stability */
+          .grid {
+            display: block !important;
+          }
+
+          .grid > div {
+            margin-bottom: 20px;
+            break-inside: avoid;
+            width: 100% !important;
           }
         }
       `}} />
