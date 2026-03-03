@@ -141,6 +141,7 @@ const ReferencePreview: React.FC<ReferencePreviewProps> = ({ script, onClose }) 
             overflow: visible !important;
             margin: 0 !important;
             padding: 0 !important;
+            padding-top: 10mm !important; /* Safety margin for top of page */
             background: white !important;
           }
 
