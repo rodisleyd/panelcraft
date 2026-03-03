@@ -174,7 +174,7 @@ const ReferencePreview: React.FC<ReferencePreviewProps> = ({ script, onClose }) 
           .bg-white.shadow-2xl {
             width: 100% !important;
             box-shadow: none !important;
-            padding: 15mm 0 0 0 !important; /* Professional top margin for print */
+            padding: 15mm 15mm 10mm 15mm !important; /* Safe margins for all sides */
             margin: 0 !important;
           }
 
