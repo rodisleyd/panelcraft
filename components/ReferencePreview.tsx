@@ -62,14 +62,14 @@ const ReferencePreview: React.FC<ReferencePreviewProps> = ({ script, onClose }) 
                     <div className="bg-white shadow-2xl w-[210mm] min-h-[297mm] p-[20mm] text-black font-sans leading-normal print:shadow-none print:p-8 print:w-full print:min-h-0 print:h-auto print:block print:static print:mx-0">
 
                         {/* Header */}
-                        <div className="flex justify-between items-start mb-8 border-b-2 border-black pb-4">
-                            <div>
-                                <img src="/logo-light-1.5.png" alt="PanelCraft" className="h-8 w-auto object-contain mb-2 logo-print" />
+                        <div className="flex justify-between items-start mb-10 border-b-2 border-black pb-6 print:mb-12 print:mt-10">
+                            <div className="flex flex-col gap-2">
+                                <img src="/logo-light-1.5.png" alt="PanelCraft" className="h-8 w-auto object-contain logo-print" />
                                 <h1 className="text-2xl font-black uppercase tracking-tight">Guia de Referências Visuais</h1>
                             </div>
-                            <div className="text-right flex flex-col items-end">
-                                <span className="text-[14px] font-bold uppercase text-brand-cyan truncate max-w-[200px]">{script.title || 'PROJETO SEM TÍTULO'}</span>
-                                <span className="text-[10px] font-medium text-gray-500 italic">{script.trt || 'v1.5'}</span>
+                            <div className="text-right flex flex-col items-end pt-2">
+                                <span className="text-[14px] font-bold uppercase text-brand-cyan truncate max-w-[250px]">{script.title || 'PROJETO SEM TÍTULO'}</span>
+                                <span className="text-[10px] font-medium text-gray-400 italic">{script.trt || 'v1.5'}</span>
                             </div>
                         </div>
 
@@ -131,11 +131,13 @@ const ReferencePreview: React.FC<ReferencePreviewProps> = ({ script, onClose }) 
         @media print {
           @page {
             size: A4;
-            margin: 15mm 15mm 15mm 15mm; /* Balanced standard margins */
+            margin: 0; /* Let's control everything manually for 100% precision */
           }
           
           * {
             box-sizing: border-box !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
 
           html, body {
@@ -147,26 +149,30 @@ const ReferencePreview: React.FC<ReferencePreviewProps> = ({ script, onClose }) 
             width: 100% !important;
           }
 
-          /* Reset fixed container for print to allow natural flow across pages */
+          /* Main print container */
           .fixed.inset-0.z-50 {
-            position: static !important;
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
             display: block !important;
             background: white !important;
             width: 100% !important;
             height: auto !important;
-            margin: 0 !important;
-            padding: 0 !important;
+            overflow: visible !important;
           }
 
-          /* Hide UI elements and non-essential printable stuff */
+          /* Hide interface elements */
           .print\\:hidden, 
           .sticky, 
+          header, 
+          aside, 
           button,
-          .backdrop-blur-sm {
+          .backdrop-blur-sm,
+          .z-20 {
             display: none !important;
           }
 
-          /* Modal inner content should occupy full width without restrictions */
+          /* Reset all parent wrappers to prevent clipping and allow multi-page flow */
           .relative.w-full.max-w-5xl {
              max-width: none !important;
              width: 100% !important;
@@ -175,30 +181,34 @@ const ReferencePreview: React.FC<ReferencePreviewProps> = ({ script, onClose }) 
              border: none !important;
              box-shadow: none !important;
              margin: 0 !important;
+             padding: 0 !important;
+             transform: none !important;
           }
 
           .overflow-y-auto {
             overflow: visible !important;
             height: auto !important;
             padding: 0 !important;
+            width: 100% !important;
           }
 
-          /* Use a clean white container that allows content to flow */
+          /* The main paper - Re-adding INTERNAL SAFE MARGINS */
           .bg-white.shadow-2xl {
             width: 100% !important;
+            min-width: 100% !important;
             box-shadow: none !important;
-            padding: 0 !important; /* Trust @page margins first */
+            padding: 20mm !important; /* Generous internal margins for professional look */
             margin: 0 !important;
             display: block !important;
-            min-width: 0 !important;
+            background: white !important;
           }
 
-          /* Professional Page Break Strategy */
+          /* Avoid breaking icons/titles mid-page */
           .page-break-content {
             page-break-inside: avoid;
             break-inside: avoid;
             display: block;
-            margin-top: 30px; /* Space above each panel box */
+            margin-top: 30px;
             margin-bottom: 20px;
             width: 100% !important;
             position: relative;
@@ -211,36 +221,39 @@ const ReferencePreview: React.FC<ReferencePreviewProps> = ({ script, onClose }) 
             page-break-inside: avoid;
           }
 
-          /* Header Styling for Print */
+          /* Logo adjustments */
           .logo-print {
-            height: 35px !important;
-            margin-top: 0 !important; /* @page margin is already 15mm */
-            margin-bottom: 25px !important;
+            height: 40px !important;
+            margin-bottom: 15px !important;
           }
 
           h1 {
-            margin-top: 0 !important;
+            color: #000 !important;
           }
 
-          /* Convert grid to block so panels don't break mid-column */
+          /* Layout stability */
           .grid {
-            display: block !important;
-            width: 100% !important;
+            display: block !important; /* Stack elements for safer printing on smaller margins */
           }
 
           .grid > div {
-            margin-bottom: 20px;
+            margin-bottom: 30px;
             break-inside: avoid;
             width: 100% !important;
           }
 
-          /* Clean up borders and shadows for physical printing */
-          .border, .border-l-4 {
+          /* Print aesthetics */
+          .border-b-2, .border-l-4, .border {
              border-color: #000 !important;
           }
 
           .bg-gray-50, .bg-black/5 {
-             background-color: #f5f5f5 !important;
+             background-color: #f9f9f9 !important;
+          }
+
+          /* Hide annoying scrollbars in print */
+          ::-webkit-scrollbar {
+             display: none;
           }
         }
       `}} />
