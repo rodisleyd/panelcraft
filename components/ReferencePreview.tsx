@@ -58,11 +58,11 @@ const ReferencePreview: React.FC<ReferencePreviewProps> = ({ script, onClose }) 
                 </div>
 
                 {/* Paper Content */}
-                <div className="flex-1 overflow-y-auto p-4 md:p-12 bg-gray-200 dark:bg-black/20 custom-scrollbar print:p-0 print:bg-white print:overflow-visible print:block print:h-auto print:static print:w-full">
-                    <div className="bg-white shadow-2xl w-[210mm] min-h-[297mm] p-[20mm] text-black font-sans leading-normal print:shadow-none print:p-0 print:w-full print:min-h-0 print:h-auto print:block print:static print:mx-0">
+                <div className="flex-1 overflow-auto p-2 md:p-12 bg-gray-200 dark:bg-black/20 custom-scrollbar print:p-0 print:bg-white print:overflow-visible flex flex-col items-center gap-8 print:block print:h-auto">
+                    <div className="bg-white shadow-2xl w-[210mm] max-w-[95vw] md:max-w-none min-h-[297mm] p-[10mm] md:p-[20mm] text-black font-sans leading-normal print:shadow-none print:p-0 print:w-[210mm] print:min-h-[297mm] print:mb-0 mx-auto origin-top transition-transform">
 
-                        {/* Header */}
-                        <div className="flex justify-between items-start mb-10 border-b-2 border-black pb-6 print:mb-12">
+                        {/* Header - Manual Padding for Print on First Page */}
+                        <div className="flex justify-between items-start mb-10 border-b-2 border-black pb-6 print:mb-12 print:px-[20mm] print:pt-[20mm]">
                             <div className="flex flex-col gap-2">
                                 <img src="/logo-light-1.5.png" alt="PanelCraft" className="h-8 w-auto object-contain logo-print" />
                                 <h1 className="text-2xl font-black uppercase tracking-tight">Guia de Referências Visuais</h1>
@@ -74,9 +74,9 @@ const ReferencePreview: React.FC<ReferencePreviewProps> = ({ script, onClose }) 
                         </div>
 
                         {panelsWithRefs.length > 0 ? (
-                            <div className="space-y-12 print:space-y-8">
+                            <div className="space-y-12 print:space-y-0">
                                 {panelsWithRefs.map((panel, pIdx) => (
-                                    <div key={panel.id} className="page-break-content mb-8 print:mb-12">
+                                    <div key={panel.id} className="mb-0 print:pt-[20mm] print:px-[20mm] break-inside-avoid">
                                         <div className="bg-black/5 p-2 mb-4 flex items-center justify-between border-l-4 border-black print:bg-gray-100">
                                             <span className="font-black text-xs uppercase tracking-widest">
                                                 Página {panel.pageNumber} — Painel {panel.panelNumber}
@@ -86,9 +86,9 @@ const ReferencePreview: React.FC<ReferencePreviewProps> = ({ script, onClose }) 
                                             </span>
                                         </div>
 
-                                        <div className="grid grid-cols-2 gap-4 print:gap-6">
+                                        <div className="grid grid-cols-2 gap-4 print:gap-6 print:grid-cols-2">
                                             {panel.references?.map((ref) => (
-                                                <div key={ref.id} className="border border-gray-200 rounded-lg overflow-hidden flex flex-col bg-gray-50 print:break-inside-avoid shadow-sm">
+                                                <div key={ref.id} className="border border-gray-200 rounded-lg overflow-hidden flex flex-col bg-gray-50 break-inside-avoid shadow-sm">
                                                     {ref.type === 'image' ? (
                                                         <img src={ref.value} alt="Reference" className="w-full h-auto object-contain bg-white min-h-[150px]" />
                                                     ) : (
@@ -118,7 +118,7 @@ const ReferencePreview: React.FC<ReferencePreviewProps> = ({ script, onClose }) 
                             </div>
                         )}
 
-                        <div className="mt-20 pt-8 border-t border-gray-100 flex justify-between items-center opacity-30 print:mt-10">
+                        <div className="mt-20 pt-8 border-t border-gray-100 flex justify-between items-center opacity-30 print:mt-10 print:px-[20mm]">
                             <span className="text-[9px] font-bold uppercase tracking-widest">© PanelCraft — Guia Técnico do Desenhista</span>
                             <span className="text-[9px] font-bold uppercase tracking-widest">Fim do Documento</span>
                         </div>
@@ -131,119 +131,43 @@ const ReferencePreview: React.FC<ReferencePreviewProps> = ({ script, onClose }) 
         @media print {
           @page {
             size: A4;
-            margin: 20mm; /* Standard margin applied to EVERY page */
+            margin: 0;
           }
-          
-          * {
-            box-sizing: border-box !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-
-          html, body {
-            height: auto !important;
-            overflow: visible !important;
+          body {
+            margin: 0;
+            padding: 0;
             background: white !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            width: 100% !important;
+            overflow: visible !important;
+            height: auto !important;
           }
-
-          /* Reset fixed container for print */
+          /* Reset do container fixed para print */
           .fixed.inset-0.z-50 {
             position: static !important;
             display: block !important;
             background: white !important;
             width: 100% !important;
             height: auto !important;
-            overflow: visible !important;
-          }
-
-          /* Hide interface elements */
-          .print\\:hidden, 
-          .sticky, 
-          header, 
-          aside, 
-          button,
-          .backdrop-blur-sm,
-          .z-20 {
-            display: none !important;
-          }
-
-          /* Full width flow */
-          .relative.w-full.max-w-5xl {
-             max-width: none !important;
-             width: 100% !important;
-             height: auto !important;
-             overflow: visible !important;
-             border: none !important;
-             box-shadow: none !important;
-             margin: 0 !important;
-             padding: 0 !important;
-             transform: none !important;
-          }
-
-          .overflow-y-auto {
-            overflow: visible !important;
-            height: auto !important;
             padding: 0 !important;
-            width: 100% !important;
-          }
-
-          /* The main paper - Remove internal padding to use @page margin */
-          .bg-white.shadow-2xl {
-            width: 100% !important;
-            min-width: 100% !important;
-            box-shadow: none !important;
-            padding: 0 !important; 
             margin: 0 !important;
-            display: block !important;
-            background: white !important;
           }
-
-          .page-break-content {
-            page-break-inside: avoid;
-            break-inside: avoid;
-            display: block;
-            margin-bottom: 30px;
-            width: 100% !important;
-            position: relative;
+          .animate-fade-in {
+            animation: none !important;
           }
-
+          ::-webkit-scrollbar {
+            display: none;
+          }
+          .grid {
+            display: grid !important;
+          }
           img {
             max-width: 100% !important;
             height: auto !important;
             display: block;
-            page-break-inside: avoid;
           }
-
           .logo-print {
             height: 40px !important;
-            margin-bottom: 15px !important;
-          }
-
-          /* Layout stability */
-          .grid {
-            display: block !important; 
-          }
-
-          .grid > div {
-            margin-bottom: 25px;
-            break-inside: avoid;
-            width: 100% !important;
-          }
-
-          /* Print aesthetics */
-          .border-b-2, .border-l-4, .border {
-             border-color: #000 !important;
-          }
-
-          .bg-gray-50, .bg-black/5 {
-             background-color: #f9f9f9 !important;
-          }
-
-          ::-webkit-scrollbar {
-             display: none;
+            width: auto !important;
+            margin-bottom: 5px !important;
           }
         }
       `}} />
