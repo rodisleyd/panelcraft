@@ -59,10 +59,10 @@ const ReferencePreview: React.FC<ReferencePreviewProps> = ({ script, onClose }) 
 
                 {/* Paper Content */}
                 <div className="flex-1 overflow-y-auto p-4 md:p-12 bg-gray-200 dark:bg-black/20 custom-scrollbar print:p-0 print:bg-white print:overflow-visible print:block print:h-auto print:static print:w-full">
-                    <div className="bg-white shadow-2xl w-[210mm] min-h-[297mm] p-[20mm] text-black font-sans leading-normal print:shadow-none print:p-8 print:w-full print:min-h-0 print:h-auto print:block print:static print:mx-0">
+                    <div className="bg-white shadow-2xl w-[210mm] min-h-[297mm] p-[20mm] text-black font-sans leading-normal print:shadow-none print:p-0 print:w-full print:min-h-0 print:h-auto print:block print:static print:mx-0">
 
                         {/* Header */}
-                        <div className="flex justify-between items-start mb-10 border-b-2 border-black pb-6 print:mb-12 print:mt-10">
+                        <div className="flex justify-between items-start mb-10 border-b-2 border-black pb-6 print:mb-12">
                             <div className="flex flex-col gap-2">
                                 <img src="/logo-light-1.5.png" alt="PanelCraft" className="h-8 w-auto object-contain logo-print" />
                                 <h1 className="text-2xl font-black uppercase tracking-tight">Guia de Referências Visuais</h1>
@@ -131,7 +131,7 @@ const ReferencePreview: React.FC<ReferencePreviewProps> = ({ script, onClose }) 
         @media print {
           @page {
             size: A4;
-            margin: 0; /* Let's control everything manually for 100% precision */
+            margin: 20mm; /* Standard margin applied to EVERY page */
           }
           
           * {
@@ -149,11 +149,9 @@ const ReferencePreview: React.FC<ReferencePreviewProps> = ({ script, onClose }) 
             width: 100% !important;
           }
 
-          /* Main print container */
+          /* Reset fixed container for print */
           .fixed.inset-0.z-50 {
-            position: absolute !important;
-            top: 0 !important;
-            left: 0 !important;
+            position: static !important;
             display: block !important;
             background: white !important;
             width: 100% !important;
@@ -172,7 +170,7 @@ const ReferencePreview: React.FC<ReferencePreviewProps> = ({ script, onClose }) 
             display: none !important;
           }
 
-          /* Reset all parent wrappers to prevent clipping and allow multi-page flow */
+          /* Full width flow */
           .relative.w-full.max-w-5xl {
              max-width: none !important;
              width: 100% !important;
@@ -192,24 +190,22 @@ const ReferencePreview: React.FC<ReferencePreviewProps> = ({ script, onClose }) 
             width: 100% !important;
           }
 
-          /* The main paper - Re-adding INTERNAL SAFE MARGINS */
+          /* The main paper - Remove internal padding to use @page margin */
           .bg-white.shadow-2xl {
             width: 100% !important;
             min-width: 100% !important;
             box-shadow: none !important;
-            padding: 20mm !important; /* Generous internal margins for professional look */
+            padding: 0 !important; 
             margin: 0 !important;
             display: block !important;
             background: white !important;
           }
 
-          /* Avoid breaking icons/titles mid-page */
           .page-break-content {
             page-break-inside: avoid;
             break-inside: avoid;
             display: block;
-            margin-top: 30px;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
             width: 100% !important;
             position: relative;
           }
@@ -221,23 +217,18 @@ const ReferencePreview: React.FC<ReferencePreviewProps> = ({ script, onClose }) 
             page-break-inside: avoid;
           }
 
-          /* Logo adjustments */
           .logo-print {
             height: 40px !important;
             margin-bottom: 15px !important;
           }
 
-          h1 {
-            color: #000 !important;
-          }
-
           /* Layout stability */
           .grid {
-            display: block !important; /* Stack elements for safer printing on smaller margins */
+            display: block !important; 
           }
 
           .grid > div {
-            margin-bottom: 30px;
+            margin-bottom: 25px;
             break-inside: avoid;
             width: 100% !important;
           }
@@ -251,7 +242,6 @@ const ReferencePreview: React.FC<ReferencePreviewProps> = ({ script, onClose }) 
              background-color: #f9f9f9 !important;
           }
 
-          /* Hide annoying scrollbars in print */
           ::-webkit-scrollbar {
              display: none;
           }
