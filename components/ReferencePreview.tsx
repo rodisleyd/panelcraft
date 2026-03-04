@@ -131,7 +131,7 @@ const ReferencePreview: React.FC<ReferencePreviewProps> = ({ script, onClose }) 
         @media print {
           @page {
             size: A4;
-            margin: 15mm;
+            margin: 20mm 15mm; /* More top/bottom margin */
           }
           
           html, body {
@@ -174,7 +174,7 @@ const ReferencePreview: React.FC<ReferencePreviewProps> = ({ script, onClose }) 
           .bg-white.shadow-2xl {
             width: 100% !important;
             box-shadow: none !important;
-            padding: 15mm 15mm 10mm 15mm !important; /* Safe margins for all sides */
+            padding: 0 !important;
             margin: 0 !important;
           }
 
@@ -182,8 +182,8 @@ const ReferencePreview: React.FC<ReferencePreviewProps> = ({ script, onClose }) 
             page-break-inside: avoid;
             break-inside: avoid;
             display: block;
+            margin-top: 30px; /* Force space at top of new page */
             margin-bottom: 30px;
-            padding-top: 10px;
           }
 
           img {
@@ -195,7 +195,7 @@ const ReferencePreview: React.FC<ReferencePreviewProps> = ({ script, onClose }) 
 
           .logo-print {
             height: 40px !important;
-            margin-bottom: 20px !important;
+            margin-bottom: 25px !important;
           }
 
           .grid {
