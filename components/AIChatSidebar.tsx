@@ -36,14 +36,18 @@ const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, script, 
         const captionMatch = text.match(/(?:💬|🎙️|📜)?\s*(?:\*\*|###|#)?\s*(?:Legenda|Caption|Narração)\s*:?\s*\**\s*([\s\S]*?)(?=\n(?:\*\*|###|#|🎬|📝|💬|🎙️|📜|---)|$)/i);
         if (captionMatch) updates.captions = captionMatch[1].trim();
 
-        // Extrai Diálogos (Busca por PADRÃO: "Texto" ou PERSONAGEM: Texto)
-        // O padrão busca por palavras em maiúsculas seguidas de dois pontos
-        const dialogueMatches = text.matchAll(/(?:💬|🗣️)?\s*(?:\*\*|###)?\s*([A-ZÀ-Úa-zà-ú\s]{2,})\s*(?:\*\*|###)?\s*:\s*(?:["“])?([\s\S]*?)(?:["”])?(?=\n(?:\*\*|###|#|🎬|📝|💬|🎙️|📜|---)|$)/gi);
-        const dialogues = Array.from(dialogueMatches).map(match => ({
-            id: Math.random().toString(36).substr(2, 9),
-            character: match[1].trim().toUpperCase(),
-            text: match[2].trim()
-        }));
+        // Extrai Diálogos (Busca por Diálogo (PERSONAGEM): "Texto" ou PERSONAGEM: Texto)
+        // O padrão agora suporta o formato específico: 💬 Diálogo (Nome): "Texto"
+        const dialogueMatches = text.matchAll(/(?:💬|🗣️)?\s*(?:\*\*|###)?\s*(?:Diálogo\s*\(([^)]+)\)|([A-ZÀ-Úa-zà-ú\s]{2,}))\s*(?:\*\*|###)?\s*:\s*(?:["“])?([\s\S]*?)(?:["”])?(?=\n(?:\*\*|###|#|🎬|📝|💬|🎙️|📜|---)|$)/gi);
+        
+        const dialogues = Array.from(dialogueMatches).map(match => {
+            const charName = (match[1] || match[2] || '').trim().toUpperCase();
+            return {
+                id: Math.random().toString(36).substr(2, 9),
+                character: charName,
+                text: match[3].trim()
+            };
+        });
 
         // Só adiciona se não for confundido com os cabeçalhos fixos (Ação, Legenda)
         if (dialogues.length > 0) {
