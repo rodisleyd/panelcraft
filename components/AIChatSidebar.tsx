@@ -27,13 +27,97 @@ const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, script, 
     };
 
     const extractActionText = (text: string) => {
-        // Remove tags de markdown comuns que a IA usa para cabeçalhos de seção
-        // Ex: **Ação:** Texto... ou ### Ação\nTexto...
-        const actionMatch = text.match(/(?:\*\*|###|#)?\s*(?:Ação|Action)\s*:?\s*\**\s*([\s\S]*?)(?=\n(?:\*\*|###|#)|$)/i);
+        // Tenta encontrar o bloco de Ação dentro do texto fornecido
+        // Suporta vários formatos: **Ação:**, 📝 **Ação:**, ### Ação, etc.
+        const actionMatch = text.match(/(?:📝|🎬)?\s*(?:\*\*|###|#)?\s*(?:Ação|Action)\s*:?\s*\**\s*([\s\S]*?)(?=\n(?:\*\*|###|#|🎬|📝|💬|---)|$)/i);
         if (actionMatch && actionMatch[1]) {
             return actionMatch[1].trim();
         }
+        // Se não encontrar o marcador, mas o texto for curto, assume que é a ação
+        if (text.length < 500 && !text.includes('OPÇÃO')) {
+            return text.trim();
+        }
         return text;
+    };
+
+    // Função para renderizar o conteúdo da mensagem, dividindo em opções se necessário
+    const renderMessageContent = (msg: ChatMessage, msgIndex: number) => {
+        if (msg.role === 'user' || msgIndex === 0) {
+            return (
+                <div className={`
+                    max-w-[90%] p-4 rounded-2xl text-xs leading-relaxed shadow-sm markdown-content
+                    ${msg.role === 'user'
+                        ? 'bg-brand-dark dark:bg-flat-cyan text-white rounded-tr-none'
+                        : 'bg-white dark:bg-white/10 border border-flat-grayDark/20 dark:border-white/10 text-flat-black dark:text-white rounded-tl-none font-medium'
+                    }
+                `}>
+                    <ReactMarkdown>{msg.parts}</ReactMarkdown>
+                </div>
+            );
+        }
+
+        // Para mensagens do modelo (IA), tentamos dividir por opções
+        // O geminiService usa "---" e "### OPÇÃO X"
+        const segments = msg.parts.split(/---|\n(?=###?\s*OPÇÃO)/i).filter(s => s.trim().length > 0);
+
+        return (
+            <div className="space-y-4 w-full">
+                {segments.map((segment, sIdx) => {
+                    const isOption = segment.toUpperCase().includes('OPÇÃO');
+                    
+                    return (
+                        <div
+                            key={sIdx}
+                            className={`
+                                relative max-w-[95%] p-4 rounded-2xl text-xs leading-relaxed shadow-sm markdown-content group
+                                bg-white dark:bg-white/10 border border-flat-grayDark/20 dark:border-white/10 text-flat-black dark:text-white rounded-tl-none font-medium
+                                ${isOption ? 'border-l-4 border-l-brand-cyan' : ''}
+                            `}
+                        >
+                            {/* Action Buttons - Top Right Floating */}
+                            <div className="absolute -top-3 -right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity z-10">
+                                <button
+                                    onClick={() => copyToClipboard(segment, msgIndex + sIdx * 100)}
+                                    className="flex items-center gap-1 px-2 py-1 rounded-lg bg-brand-dark dark:bg-white text-white dark:text-brand-dark shadow-xl text-[8px] font-black uppercase tracking-widest hover:scale-105 transition-all"
+                                    title="Copiar este bloco"
+                                >
+                                    <MaterialIcon name={copiedIndex === (msgIndex + sIdx * 100) ? "check" : "content_copy"} className="text-[10px]" />
+                                    {copiedIndex === (msgIndex + sIdx * 100) ? 'Copiado!' : 'Copiar'}
+                                </button>
+                                {onApplyAction && (
+                                    <button
+                                        onClick={() => onApplyAction(extractActionText(segment))}
+                                        className="flex items-center gap-1 px-2 py-1 rounded-lg bg-brand-cyan text-white shadow-xl text-[8px] font-black uppercase tracking-widest hover:scale-105 transition-all"
+                                        title="Aplicar ação ao painel"
+                                    >
+                                        <MaterialIcon name="auto_fix_high" className="text-[10px]" />
+                                        Aplicar
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Mobile Visible Buttons */}
+                            <div className="flex md:hidden items-center gap-2 mb-2 pb-1 border-b border-brand-cyan/10">
+                                <button
+                                    onClick={() => copyToClipboard(segment, msgIndex + sIdx * 100)}
+                                    className="text-[8px] font-bold text-brand-cyan uppercase tracking-widest flex items-center gap-1"
+                                >
+                                    <MaterialIcon name="content_copy" className="text-[10px]" /> Copiar
+                                </button>
+                                <button
+                                    onClick={() => onApplyAction?.(extractActionText(segment))}
+                                    className="text-[8px] font-bold text-brand-cyan uppercase tracking-widest flex items-center gap-1"
+                                >
+                                    <MaterialIcon name="auto_fix_high" className="text-[10px]" /> Aplicar
+                                </button>
+                            </div>
+
+                            <ReactMarkdown>{segment}</ReactMarkdown>
+                        </div>
+                    );
+                })}
+            </div>
+        );
     };
 
     // Efeito para resetar mensagens e aplicar prompt inicial quando abre
@@ -110,57 +194,7 @@ const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, script, 
                         key={i}
                         className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'} animate-fade-in`}
                     >
-                        <div className={`
-              relative max-w-[90%] p-4 rounded-2xl text-xs leading-relaxed shadow-sm markdown-content group
-              ${msg.role === 'user'
-                                ? 'bg-brand-dark dark:bg-flat-cyan text-white rounded-tr-none'
-                                : 'bg-white dark:bg-white/10 border border-flat-grayDark/20 dark:border-white/10 text-flat-black dark:text-white rounded-tl-none font-medium'
-                            }
-            `}>
-                            {/* Action Buttons for AI Messages - Top Right Floating */}
-                            {msg.role === 'model' && i > 0 && (
-                                <div className="absolute -top-3 -right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity z-10">
-                                    <button
-                                        onClick={() => copyToClipboard(msg.parts, i)}
-                                        className="flex items-center gap-1 px-2 py-1 rounded-lg bg-brand-dark dark:bg-white text-white dark:text-brand-dark shadow-xl text-[8px] font-black uppercase tracking-widest hover:scale-105 transition-all"
-                                        title="Copiar texto completo"
-                                    >
-                                        <MaterialIcon name={copiedIndex === i ? "check" : "content_copy"} className="text-[10px]" />
-                                        {copiedIndex === i ? 'Copiado!' : 'Copiar'}
-                                    </button>
-                                    {onApplyAction && (
-                                        <button
-                                            onClick={() => onApplyAction(extractActionText(msg.parts))}
-                                            className="flex items-center gap-1 px-2 py-1 rounded-lg bg-brand-cyan text-white shadow-xl text-[8px] font-black uppercase tracking-widest hover:scale-105 transition-all"
-                                            title="Aplicar texto ao painel selecionado"
-                                        >
-                                            <MaterialIcon name="auto_fix_high" className="text-[10px]" />
-                                            Aplicar
-                                        </button>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* Mobile Visible Buttons (Always visible on mobile or when not hovered) */}
-                            {msg.role === 'model' && i > 0 && (
-                                <div className="flex md:hidden items-center gap-2 mb-3 pb-2 border-b border-brand-cyan/10">
-                                    <button
-                                        onClick={() => copyToClipboard(msg.parts, i)}
-                                        className="text-[9px] font-bold text-brand-cyan uppercase tracking-widest flex items-center gap-1"
-                                    >
-                                        <MaterialIcon name="content_copy" className="text-[10px]" /> Copiar
-                                    </button>
-                                    <button
-                                        onClick={() => onApplyAction?.(extractActionText(msg.parts))}
-                                        className="text-[9px] font-bold text-brand-cyan uppercase tracking-widest flex items-center gap-1"
-                                    >
-                                        <MaterialIcon name="auto_fix_high" className="text-[10px]" /> Aplicar
-                                    </button>
-                                </div>
-                            )}
-
-                            <ReactMarkdown>{msg.parts}</ReactMarkdown>
-                        </div>
+                        {renderMessageContent(msg, i)}
                     </div>
                 ))}
                 {isLoading && (
