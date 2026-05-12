@@ -28,12 +28,12 @@ const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, script, 
     const extractPanelUpdates = (text: string): Partial<PanelData> => {
         const updates: Partial<PanelData> = {};
 
-        // Extrai Ação (suporta vários marcadores e emojis)
-        const actionMatch = text.match(/(?:🎬|📝)?\s*(?:\*\*|###|#)?\s*(?:Ação|Action)\s*:?\s*\**\s*([\s\S]*?)(?=\n(?:\*\*|###|#|🎬|📝|💬|🎙️|📜|---)|$)/i);
+        // Extrai Ação (suporta vários marcadores e emojis) - Adicionado \b para evitar casar com "opção" ou "provocação"
+        const actionMatch = text.match(/(?:🎬|📝)?\s*(?:\*\*|###|#)?\s*\b(?:Ação|Action)\b\s*:?\s*\**\s*([\s\S]*?)(?=\n(?:\*\*|###|#|🎬|📝|💬|🎙️|📜|---)|$)/i);
         if (actionMatch) updates.action = actionMatch[1].trim();
 
-        // Extrai Legenda (suporta vários marcadores e emojis)
-        const captionMatch = text.match(/(?:💬|🎙️|📜)?\s*(?:\*\*|###|#)?\s*(?:Legenda|Caption|Narração)\s*:?\s*\**\s*([\s\S]*?)(?=\n(?:\*\*|###|#|🎬|📝|💬|🎙️|📜|---)|$)/i);
+        // Extrai Legenda (suporta vários marcadores e emojis) - Adicionado \b
+        const captionMatch = text.match(/(?:💬|🎙️|📜)?\s*(?:\*\*|###|#)?\s*\b(?:Legenda|Caption|Narração)\b\s*:?\s*\**\s*([\s\S]*?)(?=\n(?:\*\*|###|#|🎬|📝|💬|🎙️|📜|---)|$)/i);
         if (captionMatch) updates.captions = captionMatch[1].trim();
 
         // Extrai Diálogos (Busca por Diálogo (PERSONAGEM): "Texto" ou PERSONAGEM: Texto)
@@ -57,8 +57,9 @@ const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, script, 
             if (filteredDialogues.length > 0) updates.dialogues = filteredDialogues;
         }
 
-        // Se não encontrar marcadores, mas o texto for curto, assume que é Ação
-        if (Object.keys(updates).length === 0 && text.length < 500 && !text.includes('OPÇÃO')) {
+        // Se não encontrar marcadores, mas o texto for curto e NÃO encontramos Diálogos ou Legendas, 
+        // assume que o texto inteiro é a Ação (fallback para respostas simples)
+        if (Object.keys(updates).length === 0 && text.length < 600 && !text.includes('OPÇÃO')) {
             updates.action = text.trim();
         }
 
