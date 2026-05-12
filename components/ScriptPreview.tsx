@@ -111,7 +111,7 @@ const ScriptPreview: React.FC<ScriptPreviewProps> = ({ script, onClose, onExport
                                                     <div className="bg-[#D9D9D9] px-3 py-1 text-[11px] font-bold uppercase tracking-tight border-b border-black">
                                                         Ação
                                                     </div>
-                                                    <div className="p-3 text-[12px] leading-relaxed font-medium break-all md:break-words">
+                                                    <div className="p-3 text-[12px] leading-relaxed font-medium break-words">
                                                         {panel.action || '-'}
                                                     </div>
                                                 </div>
@@ -121,7 +121,7 @@ const ScriptPreview: React.FC<ScriptPreviewProps> = ({ script, onClose, onExport
                                                     <div className="bg-[#D9D9D9] px-3 py-1 text-[11px] font-bold uppercase tracking-tight border-b border-black">
                                                         Diálogos
                                                     </div>
-                                                    <div className="p-3 space-y-3 font-medium break-all md:break-words">
+                                                    <div className="p-3 space-y-3 font-medium break-words">
                                                         {panel.dialogues.map((d) => (
                                                             <div key={d.id} className="text-[12px]">
                                                                 <span className="font-bold">{d.character}: </span>
@@ -137,7 +137,7 @@ const ScriptPreview: React.FC<ScriptPreviewProps> = ({ script, onClose, onExport
                                                     <div className="bg-[#D9D9D9] px-3 py-1 text-[11px] font-bold uppercase tracking-tight border-b border-black">
                                                         Legendas
                                                     </div>
-                                                    <div className="p-3 text-[12px] italic leading-relaxed font-medium break-all md:break-words">
+                                                    <div className="p-3 text-[12px] italic leading-relaxed font-medium break-words">
                                                         {panel.captions || '-'}
                                                     </div>
                                                 </div>
