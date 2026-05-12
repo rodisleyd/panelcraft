@@ -12,6 +12,7 @@ interface PanelEditorProps {
   onUpdate: (panelId: string, field: keyof PanelData, value: any) => void;
   onDelete: (panelId: string) => void;
   isActive: boolean;
+  onSelect: (panelId: string) => void;
   onAddPanel: (pageId: string) => void;
   pageId: string;
   characters: { name: string }[];
@@ -19,7 +20,7 @@ interface PanelEditorProps {
   onOpenAIChat: (initialPrompt?: string) => void;
 }
 
-const PanelEditor: React.FC<PanelEditorProps> = ({ panel, index, onUpdate, onDelete, isActive, onAddPanel, pageId, characters, onShowAlert, onOpenAIChat }) => {
+const PanelEditor: React.FC<PanelEditorProps> = ({ panel, index, onUpdate, onDelete, isActive, onSelect, onAddPanel, pageId, characters, onShowAlert, onOpenAIChat }) => {
   const [isRefining, setIsRefining] = React.useState<string | null>(null);
   const [isNotesOpen, setIsNotesOpen] = React.useState(false);
 
@@ -98,6 +99,7 @@ const PanelEditor: React.FC<PanelEditorProps> = ({ panel, index, onUpdate, onDel
           onAddPanel(pageId);
         }
       }}
+      onFocusCapture={() => !isActive && onSelect(panel.id)}
       className={`relative panel-card p-4 xl:p-8 mb-6 xl:mb-12 transition-all animate-fade-in outline-none ${isActive
         ? 'ring-2 ring-brand-cyan shadow-xl translate-y-[-4px]'
         : 'hover:translate-y-[-2px]'

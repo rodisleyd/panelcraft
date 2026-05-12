@@ -963,6 +963,7 @@ const App: React.FC = () => {
                     panel={panel}
                     index={idx}
                     isActive={activePanelId === panel.id}
+                    onSelect={handleSelectPanel}
                     onUpdate={updatePanel}
                     onDelete={removePanel}
                     onAddPanel={addPanel}
