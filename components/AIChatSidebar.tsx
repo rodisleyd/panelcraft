@@ -111,38 +111,56 @@ const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, script, 
                         className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'} animate-fade-in`}
                     >
                         <div className={`
-              max-w-[90%] p-4 rounded-2xl text-xs leading-relaxed shadow-sm markdown-content
+              relative max-w-[90%] p-4 rounded-2xl text-xs leading-relaxed shadow-sm markdown-content group
               ${msg.role === 'user'
                                 ? 'bg-brand-dark dark:bg-flat-cyan text-white rounded-tr-none'
                                 : 'bg-white dark:bg-white/10 border border-flat-grayDark/20 dark:border-white/10 text-flat-black dark:text-white rounded-tl-none font-medium'
                             }
             `}>
+                            {/* Action Buttons for AI Messages - Top Right Floating */}
+                            {msg.role === 'model' && i > 0 && (
+                                <div className="absolute -top-3 -right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity z-10">
+                                    <button
+                                        onClick={() => copyToClipboard(msg.parts, i)}
+                                        className="flex items-center gap-1 px-2 py-1 rounded-lg bg-brand-dark dark:bg-white text-white dark:text-brand-dark shadow-xl text-[8px] font-black uppercase tracking-widest hover:scale-105 transition-all"
+                                        title="Copiar texto completo"
+                                    >
+                                        <MaterialIcon name={copiedIndex === i ? "check" : "content_copy"} className="text-[10px]" />
+                                        {copiedIndex === i ? 'Copiado!' : 'Copiar'}
+                                    </button>
+                                    {onApplyAction && (
+                                        <button
+                                            onClick={() => onApplyAction(extractActionText(msg.parts))}
+                                            className="flex items-center gap-1 px-2 py-1 rounded-lg bg-brand-cyan text-white shadow-xl text-[8px] font-black uppercase tracking-widest hover:scale-105 transition-all"
+                                            title="Aplicar texto ao painel selecionado"
+                                        >
+                                            <MaterialIcon name="auto_fix_high" className="text-[10px]" />
+                                            Aplicar
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Mobile Visible Buttons (Always visible on mobile or when not hovered) */}
+                            {msg.role === 'model' && i > 0 && (
+                                <div className="flex md:hidden items-center gap-2 mb-3 pb-2 border-b border-brand-cyan/10">
+                                    <button
+                                        onClick={() => copyToClipboard(msg.parts, i)}
+                                        className="text-[9px] font-bold text-brand-cyan uppercase tracking-widest flex items-center gap-1"
+                                    >
+                                        <MaterialIcon name="content_copy" className="text-[10px]" /> Copiar
+                                    </button>
+                                    <button
+                                        onClick={() => onApplyAction?.(extractActionText(msg.parts))}
+                                        className="text-[9px] font-bold text-brand-cyan uppercase tracking-widest flex items-center gap-1"
+                                    >
+                                        <MaterialIcon name="auto_fix_high" className="text-[10px]" /> Aplicar
+                                    </button>
+                                </div>
+                            )}
+
                             <ReactMarkdown>{msg.parts}</ReactMarkdown>
                         </div>
-
-                        {/* Action Buttons for AI Messages */}
-                        {msg.role === 'model' && i > 0 && (
-                            <div className="flex items-center gap-2 mt-2 ml-1">
-                                <button
-                                    onClick={() => copyToClipboard(msg.parts, i)}
-                                    className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white dark:bg-white/5 border border-flat-grayDark/20 dark:border-white/10 text-[9px] font-black uppercase tracking-widest text-flat-grayMid hover:text-brand-cyan transition-colors"
-                                    title="Copiar texto completo"
-                                >
-                                    <MaterialIcon name={copiedIndex === i ? "check" : "content_copy"} className="text-[10px]" />
-                                    {copiedIndex === i ? 'Copiado!' : 'Copiar'}
-                                </button>
-                                {onApplyAction && (
-                                    <button
-                                        onClick={() => onApplyAction(extractActionText(msg.parts))}
-                                        className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-brand-cyan/10 border border-brand-cyan/20 text-[9px] font-black uppercase tracking-widest text-brand-cyan hover:bg-brand-cyan hover:text-white transition-all active:scale-95"
-                                        title="Aplicar texto ao painel selecionado"
-                                    >
-                                        <MaterialIcon name="auto_fix_high" className="text-[10px]" />
-                                        Aplicar ao Painel
-                                    </button>
-                                )}
-                            </div>
-                        )}
                     </div>
                 ))}
                 {isLoading && (

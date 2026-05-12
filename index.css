@@ -2,6 +2,8 @@
   body {
     @apply bg-[#fdfdfd] text-[#1a1a1a] dark:bg-[#0F172A] dark:text-[#F1F5F9];
     scroll-behavior: smooth;
+    word-break: normal;
+    overflow-wrap: break-word;
   }
 }
 

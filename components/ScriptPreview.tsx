@@ -107,7 +107,7 @@ const ScriptPreview: React.FC<ScriptPreviewProps> = ({ script, onClose, onExport
                                             {/* Table Structure */}
                                             <div className="grid grid-cols-3 border-x border-b border-black divide-x divide-black min-h-[120px]">
                                                 {/* ACTION */}
-                                                <div className="flex flex-col overflow-hidden">
+                                                <div className="flex flex-col">
                                                     <div className="bg-[#D9D9D9] px-3 py-1 text-[11px] font-bold uppercase tracking-tight border-b border-black">
                                                         Ação
                                                     </div>
@@ -117,7 +117,7 @@ const ScriptPreview: React.FC<ScriptPreviewProps> = ({ script, onClose, onExport
                                                 </div>
 
                                                 {/* DIALOGUES */}
-                                                <div className="flex flex-col overflow-hidden">
+                                                <div className="flex flex-col">
                                                     <div className="bg-[#D9D9D9] px-3 py-1 text-[11px] font-bold uppercase tracking-tight border-b border-black">
                                                         Diálogos
                                                     </div>
@@ -133,7 +133,7 @@ const ScriptPreview: React.FC<ScriptPreviewProps> = ({ script, onClose, onExport
                                                 </div>
 
                                                 {/* CAPTIONS */}
-                                                <div className="flex flex-col overflow-hidden">
+                                                <div className="flex flex-col">
                                                     <div className="bg-[#D9D9D9] px-3 py-1 text-[11px] font-bold uppercase tracking-tight border-b border-black">
                                                         Legendas
                                                     </div>
@@ -196,6 +196,16 @@ const ScriptPreview: React.FC<ScriptPreviewProps> = ({ script, onClose, onExport
             break-after: always !important;
             margin: 0 !important;
             border: none !important;
+          }
+          .break-words {
+            word-break: normal !important;
+            overflow-wrap: break-word !important;
+            word-wrap: break-word !important;
+          }
+          /* Garantir que as células da tabela não forcem quebras estranhas */
+          .grid.grid-cols-3 > div {
+            min-width: 0;
+            word-break: normal !important;
           }
           ::-webkit-scrollbar {
             display: none;
