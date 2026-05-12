@@ -36,6 +36,23 @@ const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, script, 
         const captionMatch = text.match(/(?:💬|🎙️|📜)?\s*(?:\*\*|###|#)?\s*(?:Legenda|Caption|Narração)\s*:?\s*\**\s*([\s\S]*?)(?=\n(?:\*\*|###|#|🎬|📝|💬|🎙️|📜|---)|$)/i);
         if (captionMatch) updates.captions = captionMatch[1].trim();
 
+        // Extrai Diálogos (Busca por PADRÃO: "Texto" ou PERSONAGEM: Texto)
+        // O padrão busca por palavras em maiúsculas seguidas de dois pontos
+        const dialogueMatches = text.matchAll(/(?:💬|🗣️)?\s*(?:\*\*|###)?\s*([A-ZÀ-Úa-zà-ú\s]{2,})\s*(?:\*\*|###)?\s*:\s*(?:["“])?([\s\S]*?)(?:["”])?(?=\n(?:\*\*|###|#|🎬|📝|💬|🎙️|📜|---)|$)/gi);
+        const dialogues = Array.from(dialogueMatches).map(match => ({
+            id: Math.random().toString(36).substr(2, 9),
+            character: match[1].trim().toUpperCase(),
+            text: match[2].trim()
+        }));
+
+        // Só adiciona se não for confundido com os cabeçalhos fixos (Ação, Legenda)
+        if (dialogues.length > 0) {
+            const filteredDialogues = dialogues.filter(d => 
+                !['AÇÃO', 'ACTION', 'LEGENDA', 'CAPTION', 'NARRAÇÃO', 'OPÇÃO'].includes(d.character)
+            );
+            if (filteredDialogues.length > 0) updates.dialogues = filteredDialogues;
+        }
+
         // Se não encontrar marcadores, mas o texto for curto, assume que é Ação
         if (Object.keys(updates).length === 0 && text.length < 500 && !text.includes('OPÇÃO')) {
             updates.action = text.trim();
