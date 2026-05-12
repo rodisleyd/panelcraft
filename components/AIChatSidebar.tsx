@@ -28,16 +28,17 @@ const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, script, 
     const extractPanelUpdates = (text: string): Partial<PanelData> => {
         const updates: Partial<PanelData> = {};
 
-        // Extrai Ação (suporta vários marcadores e emojis) - Adicionado \b para evitar casar com "opção" ou "provocação"
-        const actionMatch = text.match(/(?:🎬|📝)?\s*(?:\*\*|###|#)?\s*\b(?:Ação|Action)\b\s*:?\s*\**\s*([\s\S]*?)(?=\n(?:\*\*|###|#|🎬|📝|💬|🎙️|📜|---)|$)/i);
-        if (actionMatch) updates.action = actionMatch[1].trim();
+        // Extrai todas as Ações e as une
+        const actionMatches = text.matchAll(/(?:🎬|📝)?\s*(?:\*\*|###|#)?\s*\b(?:Ação|Action)\b\s*:?\s*\**\s*([\s\S]*?)(?=\n(?:\*\*|###|#|🎬|📝|💬|🎙️|📜|---)|$)/gi);
+        const actions = Array.from(actionMatches).map(m => m[1].trim()).filter(Boolean);
+        if (actions.length > 0) updates.action = actions.join('\n\n');
 
-        // Extrai Legenda (suporta vários marcadores e emojis) - Adicionado \b
-        const captionMatch = text.match(/(?:💬|🎙️|📜)?\s*(?:\*\*|###|#)?\s*\b(?:Legenda|Caption|Narração)\b\s*:?\s*\**\s*([\s\S]*?)(?=\n(?:\*\*|###|#|🎬|📝|💬|🎙️|📜|---)|$)/i);
-        if (captionMatch) updates.captions = captionMatch[1].trim();
+        // Extrai todas as Legendas e as une
+        const captionMatches = text.matchAll(/(?:💬|🎙️|📜)?\s*(?:\*\*|###|#)?\s*\b(?:Legenda|Caption|Narração)\b\s*:?\s*\**\s*([\s\S]*?)(?=\n(?:\*\*|###|#|🎬|📝|💬|🎙️|📜|---)|$)/gi);
+        const captions = Array.from(captionMatches).map(m => m[1].trim()).filter(Boolean);
+        if (captions.length > 0) updates.captions = captions.join('\n\n');
 
         // Extrai Diálogos (Busca por Diálogo (PERSONAGEM): "Texto" ou PERSONAGEM: Texto)
-        // O padrão agora suporta o formato específico: 💬 Diálogo (Nome): "Texto"
         const dialogueMatches = text.matchAll(/(?:💬|🗣️)?\s*(?:\*\*|###)?\s*(?:Diálogo\s*\(([^)]+)\)|([A-ZÀ-Úa-zà-ú\s]{2,}))\s*(?:\*\*|###)?\s*:\s*(?:["“])?([\s\S]*?)(?:["”])?(?=\n(?:\*\*|###|#|🎬|📝|💬|🎙️|📜|---)|$)/gi);
         
         const dialogues = Array.from(dialogueMatches).map(match => {
@@ -49,7 +50,6 @@ const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, script, 
             };
         });
 
-        // Só adiciona se não for confundido com os cabeçalhos fixos (Ação, Legenda)
         if (dialogues.length > 0) {
             const filteredDialogues = dialogues.filter(d => 
                 !['AÇÃO', 'ACTION', 'LEGENDA', 'CAPTION', 'NARRAÇÃO', 'OPÇÃO'].includes(d.character)
@@ -57,8 +57,6 @@ const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, script, 
             if (filteredDialogues.length > 0) updates.dialogues = filteredDialogues;
         }
 
-        // Se não encontrar marcadores, mas o texto for curto e NÃO encontramos Diálogos ou Legendas, 
-        // assume que o texto inteiro é a Ação (fallback para respostas simples)
         if (Object.keys(updates).length === 0 && text.length < 600 && !text.includes('OPÇÃO')) {
             updates.action = text.trim();
         }
@@ -102,15 +100,15 @@ const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, script, 
                                 ${isOption ? 'border-l-4 border-l-brand-cyan' : ''}
                             `}
                         >
-                            {/* Action Buttons - Top Right Floating */}
-                            <div className="absolute -top-3 -right-2 flex flex-wrap items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity z-10 max-w-[200px] justify-end">
+                            {/* Action Buttons - Top Right Floating - SEMPRE VISÍVEIS para facilitar */}
+                            <div className="absolute -top-3 -right-2 flex flex-wrap items-center gap-1 z-10 max-w-[200px] justify-end">
                                 <button
                                     onClick={() => copyToClipboard(segment, msgIndex + sIdx * 100)}
-                                    className="flex items-center gap-1 px-2 py-1 rounded-lg bg-brand-dark dark:bg-white text-white dark:text-brand-dark shadow-xl text-[8px] font-black uppercase tracking-widest hover:scale-105 transition-all"
+                                    className="flex items-center gap-1 px-2 py-1 rounded-lg bg-brand-dark dark:bg-white text-white dark:text-brand-dark shadow-xl text-[8px] font-black uppercase tracking-widest hover:scale-110 transition-all border border-white/10"
                                     title="Copiar este bloco"
                                 >
                                     <MaterialIcon name={copiedIndex === (msgIndex + sIdx * 100) ? "check" : "content_copy"} className="text-[10px]" />
-                                    {copiedIndex === (msgIndex + sIdx * 100) ? 'Copiado!' : 'Copiar'}
+                                    {copiedIndex === (msgIndex + sIdx * 100) ? 'Copiar' : 'Copiar'}
                                 </button>
                                 
                                 {onApplyAction && (
@@ -118,8 +116,8 @@ const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, script, 
                                         {updates.action && (
                                             <button
                                                 onClick={() => onApplyAction({ action: updates.action })}
-                                                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-brand-cyan text-white shadow-xl text-[8px] font-black uppercase tracking-widest hover:scale-105 transition-all"
-                                                title="Aplicar apenas Ação"
+                                                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-brand-cyan text-white shadow-xl text-[8px] font-black uppercase tracking-widest hover:scale-110 transition-all border border-white/10"
+                                                title="Aplicar Ação"
                                             >
                                                 <MaterialIcon name="movie" className="text-[10px]" />
                                                 Ação
@@ -128,8 +126,8 @@ const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, script, 
                                         {updates.dialogues && (
                                             <button
                                                 onClick={() => onApplyAction({ dialogues: updates.dialogues })}
-                                                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-brand-pink text-white shadow-xl text-[8px] font-black uppercase tracking-widest hover:scale-105 transition-all"
-                                                title="Aplicar apenas Diálogos"
+                                                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-brand-pink text-white shadow-xl text-[8px] font-black uppercase tracking-widest hover:scale-110 transition-all border border-white/10"
+                                                title="Aplicar Diálogos"
                                             >
                                                 <MaterialIcon name="forum" className="text-[10px]" />
                                                 Diálogos
@@ -138,8 +136,8 @@ const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, script, 
                                         {updates.captions && (
                                             <button
                                                 onClick={() => onApplyAction({ captions: updates.captions })}
-                                                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-flat-grayLight text-white shadow-xl text-[8px] font-black uppercase tracking-widest hover:scale-105 transition-all"
-                                                title="Aplicar apenas Legenda"
+                                                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-flat-grayLight text-white shadow-xl text-[8px] font-black uppercase tracking-widest hover:scale-110 transition-all border border-white/10"
+                                                title="Aplicar Legenda"
                                             >
                                                 <MaterialIcon name="notes" className="text-[10px]" />
                                                 Legenda
