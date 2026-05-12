@@ -499,13 +499,22 @@ const App: React.FC = () => {
     }));
   }, []);
 
-  const handleApplyAIAction = useCallback((text: string) => {
+  const handleApplyAIAction = useCallback((updates: Partial<PanelData>) => {
     if (!activePanelId) {
       showAlert("Painel não selecionado", "Clique em um painel primeiro para que a IA saiba onde aplicar o texto! ✍️");
       return;
     }
-    updatePanel(activePanelId, 'action', text);
-  }, [activePanelId, updatePanel]);
+    
+    setScript(prev => ({
+      ...prev,
+      pages: prev.pages.map(p => ({
+        ...p,
+        panels: p.panels.map(panel =>
+          panel.id === activePanelId ? { ...panel, ...updates } : panel
+        )
+      }))
+    }));
+  }, [activePanelId]);
 
   const exportScript = (format: ExportFormat) => {
     const filename = (script.title || 'Roteiro_Sem_Titulo').replace(/\s+/g, '_');

@@ -1,16 +1,15 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { MaterialIcon } from '../constants';
 import { getAIChatResponse, ChatMessage } from '../services/geminiService';
-import { ScriptData } from '../types';
+import { ScriptData, PanelData } from '../types';
 
 interface AIChatSidebarProps {
     isOpen: boolean;
     onClose: () => void;
     script: ScriptData;
     initialPrompt?: string;
-    onApplyAction?: (text: string) => void;
+    onApplyAction?: (updates: Partial<PanelData>) => void;
 }
 
 const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, script, initialPrompt, onApplyAction }) => {
@@ -26,18 +25,23 @@ const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, script, 
         setTimeout(() => setCopiedIndex(null), 2000);
     };
 
-    const extractActionText = (text: string) => {
-        // Tenta encontrar o bloco de Ação dentro do texto fornecido
-        // Suporta vários formatos: **Ação:**, 📝 **Ação:**, ### Ação, etc.
-        const actionMatch = text.match(/(?:📝|🎬)?\s*(?:\*\*|###|#)?\s*(?:Ação|Action)\s*:?\s*\**\s*([\s\S]*?)(?=\n(?:\*\*|###|#|🎬|📝|💬|---)|$)/i);
-        if (actionMatch && actionMatch[1]) {
-            return actionMatch[1].trim();
+    const extractPanelUpdates = (text: string): Partial<PanelData> => {
+        const updates: Partial<PanelData> = {};
+
+        // Extrai Ação (suporta vários marcadores e emojis)
+        const actionMatch = text.match(/(?:🎬|📝)?\s*(?:\*\*|###|#)?\s*(?:Ação|Action)\s*:?\s*\**\s*([\s\S]*?)(?=\n(?:\*\*|###|#|🎬|📝|💬|🎙️|📜|---)|$)/i);
+        if (actionMatch) updates.action = actionMatch[1].trim();
+
+        // Extrai Legenda (suporta vários marcadores e emojis)
+        const captionMatch = text.match(/(?:💬|🎙️|📜)?\s*(?:\*\*|###|#)?\s*(?:Legenda|Caption|Narração)\s*:?\s*\**\s*([\s\S]*?)(?=\n(?:\*\*|###|#|🎬|📝|💬|🎙️|📜|---)|$)/i);
+        if (captionMatch) updates.captions = captionMatch[1].trim();
+
+        // Se não encontrar marcadores, mas o texto for curto, assume que é Ação
+        if (Object.keys(updates).length === 0 && text.length < 500 && !text.includes('OPÇÃO')) {
+            updates.action = text.trim();
         }
-        // Se não encontrar o marcador, mas o texto for curto, assume que é a ação
-        if (text.length < 500 && !text.includes('OPÇÃO')) {
-            return text.trim();
-        }
-        return text;
+
+        return updates;
     };
 
     // Função para renderizar o conteúdo da mensagem, dividindo em opções se necessário
@@ -64,6 +68,8 @@ const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, script, 
             <div className="space-y-4 w-full">
                 {segments.map((segment, sIdx) => {
                     const isOption = segment.toUpperCase().includes('OPÇÃO');
+                    const updates = extractPanelUpdates(segment);
+                    const hasUpdates = Object.keys(updates).length > 0;
                     
                     return (
                         <div
@@ -84,11 +90,11 @@ const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, script, 
                                     <MaterialIcon name={copiedIndex === (msgIndex + sIdx * 100) ? "check" : "content_copy"} className="text-[10px]" />
                                     {copiedIndex === (msgIndex + sIdx * 100) ? 'Copiado!' : 'Copiar'}
                                 </button>
-                                {onApplyAction && (
+                                {onApplyAction && hasUpdates && (
                                     <button
-                                        onClick={() => onApplyAction(extractActionText(segment))}
+                                        onClick={() => onApplyAction(updates)}
                                         className="flex items-center gap-1 px-2 py-1 rounded-lg bg-brand-cyan text-white shadow-xl text-[8px] font-black uppercase tracking-widest hover:scale-105 transition-all"
-                                        title="Aplicar ação ao painel"
+                                        title="Aplicar automaticamente aos campos correspondentes"
                                     >
                                         <MaterialIcon name="auto_fix_high" className="text-[10px]" />
                                         Aplicar
@@ -104,12 +110,14 @@ const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, script, 
                                 >
                                     <MaterialIcon name="content_copy" className="text-[10px]" /> Copiar
                                 </button>
-                                <button
-                                    onClick={() => onApplyAction?.(extractActionText(segment))}
-                                    className="text-[8px] font-bold text-brand-cyan uppercase tracking-widest flex items-center gap-1"
-                                >
-                                    <MaterialIcon name="auto_fix_high" className="text-[10px]" /> Aplicar
-                                </button>
+                                {onApplyAction && hasUpdates && (
+                                    <button
+                                        onClick={() => onApplyAction(updates)}
+                                        className="text-[8px] font-bold text-brand-cyan uppercase tracking-widest flex items-center gap-1"
+                                    >
+                                        <MaterialIcon name="auto_fix_high" className="text-[10px]" /> Aplicar
+                                    </button>
+                                )}
                             </div>
 
                             <ReactMarkdown>{segment}</ReactMarkdown>
