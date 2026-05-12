@@ -179,6 +179,7 @@ const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, script, 
                                         <MaterialIcon name="notes" className="text-[10px]" /> Legenda
                                     </button>
                                 )}
+                            </div>
                             <ReactMarkdown>{segment}</ReactMarkdown>
                         </div>
                     );
