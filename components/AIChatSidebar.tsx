@@ -103,7 +103,7 @@ const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, script, 
                             `}
                         >
                             {/* Action Buttons - Top Right Floating */}
-                            <div className="absolute -top-3 -right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity z-10">
+                            <div className="absolute -top-3 -right-2 flex flex-wrap items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity z-10 max-w-[200px] justify-end">
                                 <button
                                     onClick={() => copyToClipboard(segment, msgIndex + sIdx * 100)}
                                     className="flex items-center gap-1 px-2 py-1 rounded-lg bg-brand-dark dark:bg-white text-white dark:text-brand-dark shadow-xl text-[8px] font-black uppercase tracking-widest hover:scale-105 transition-all"
@@ -112,36 +112,75 @@ const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, script, 
                                     <MaterialIcon name={copiedIndex === (msgIndex + sIdx * 100) ? "check" : "content_copy"} className="text-[10px]" />
                                     {copiedIndex === (msgIndex + sIdx * 100) ? 'Copiado!' : 'Copiar'}
                                 </button>
-                                {onApplyAction && hasUpdates && (
-                                    <button
-                                        onClick={() => onApplyAction(updates)}
-                                        className="flex items-center gap-1 px-2 py-1 rounded-lg bg-brand-cyan text-white shadow-xl text-[8px] font-black uppercase tracking-widest hover:scale-105 transition-all"
-                                        title="Aplicar automaticamente aos campos correspondentes"
-                                    >
-                                        <MaterialIcon name="auto_fix_high" className="text-[10px]" />
-                                        Aplicar
-                                    </button>
+                                
+                                {onApplyAction && (
+                                    <div className="flex gap-1 flex-wrap justify-end">
+                                        {updates.action && (
+                                            <button
+                                                onClick={() => onApplyAction({ action: updates.action })}
+                                                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-brand-cyan text-white shadow-xl text-[8px] font-black uppercase tracking-widest hover:scale-105 transition-all"
+                                                title="Aplicar apenas Ação"
+                                            >
+                                                <MaterialIcon name="movie" className="text-[10px]" />
+                                                Ação
+                                            </button>
+                                        )}
+                                        {updates.dialogues && (
+                                            <button
+                                                onClick={() => onApplyAction({ dialogues: updates.dialogues })}
+                                                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-brand-pink text-white shadow-xl text-[8px] font-black uppercase tracking-widest hover:scale-105 transition-all"
+                                                title="Aplicar apenas Diálogos"
+                                            >
+                                                <MaterialIcon name="forum" className="text-[10px]" />
+                                                Diálogos
+                                            </button>
+                                        )}
+                                        {updates.captions && (
+                                            <button
+                                                onClick={() => onApplyAction({ captions: updates.captions })}
+                                                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-flat-grayLight text-white shadow-xl text-[8px] font-black uppercase tracking-widest hover:scale-105 transition-all"
+                                                title="Aplicar apenas Legenda"
+                                            >
+                                                <MaterialIcon name="notes" className="text-[10px]" />
+                                                Legenda
+                                            </button>
+                                        )}
+                                    </div>
                                 )}
                             </div>
 
                             {/* Mobile Visible Buttons */}
-                            <div className="flex md:hidden items-center gap-2 mb-2 pb-1 border-b border-brand-cyan/10">
+                            <div className="flex md:hidden flex-wrap items-center gap-2 mb-2 pb-1 border-b border-brand-cyan/10">
                                 <button
                                     onClick={() => copyToClipboard(segment, msgIndex + sIdx * 100)}
                                     className="text-[8px] font-bold text-brand-cyan uppercase tracking-widest flex items-center gap-1"
                                 >
                                     <MaterialIcon name="content_copy" className="text-[10px]" /> Copiar
                                 </button>
-                                {onApplyAction && hasUpdates && (
+                                {updates.action && (
                                     <button
-                                        onClick={() => onApplyAction(updates)}
+                                        onClick={() => onApplyAction?.({ action: updates.action })}
                                         className="text-[8px] font-bold text-brand-cyan uppercase tracking-widest flex items-center gap-1"
                                     >
-                                        <MaterialIcon name="auto_fix_high" className="text-[10px]" /> Aplicar
+                                        <MaterialIcon name="movie" className="text-[10px]" /> Ação
                                     </button>
                                 )}
-                            </div>
-
+                                {updates.dialogues && (
+                                    <button
+                                        onClick={() => onApplyAction?.({ dialogues: updates.dialogues })}
+                                        className="text-[8px] font-bold text-flat-pink uppercase tracking-widest flex items-center gap-1"
+                                    >
+                                        <MaterialIcon name="forum" className="text-[10px]" /> Diálogos
+                                    </button>
+                                )}
+                                {updates.captions && (
+                                    <button
+                                        onClick={() => onApplyAction?.({ captions: updates.captions })}
+                                        className="text-[8px] font-bold text-flat-grayLight uppercase tracking-widest flex items-center gap-1"
+                                    >
+                                        <MaterialIcon name="notes" className="text-[10px]" /> Legenda
+                                    </button>
+                                )}
                             <ReactMarkdown>{segment}</ReactMarkdown>
                         </div>
                     );
