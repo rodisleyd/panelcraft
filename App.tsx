@@ -687,7 +687,7 @@ const App: React.FC = () => {
       {showSplash && <SplashScreen onComplete={() => setShowSplash(false)} />}
 
       {/* Main Content Area */}
-      <main className={`flex-1 flex flex-col min-w-0 ${darkMode ? 'bg-brand-dark' : 'bg-white'} print:hidden transition-all duration-1000 ${showSplash ? 'blur-xl scale-110 grayscale-[0.5]' : 'blur-0 scale-100 grayscale-0'}`}>
+      <main className={`flex-1 flex flex-col min-w-0 ${darkMode ? 'bg-brand-dark' : 'bg-white'} print:hidden transition-all duration-300 ${showSplash ? 'blur-xl scale-110 grayscale-[0.5]' : 'blur-0 scale-100 grayscale-0'} ${showAIChat ? 'xl:mr-96' : ''}`}>
         {/* Header */}
         <header className={`h-20 flex-shrink-0 ${darkMode ? 'bg-brand-dark/80 border-white/10' : 'glass border-flat-grayDark/50'} border-b px-4 lg:px-8 flex items-center justify-between z-30 shadow-premium sticky top-0 transition-all`}>
           <div className="flex items-center gap-2 lg:gap-8 min-w-0">
