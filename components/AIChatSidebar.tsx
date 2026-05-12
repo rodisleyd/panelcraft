@@ -10,13 +10,31 @@ interface AIChatSidebarProps {
     onClose: () => void;
     script: ScriptData;
     initialPrompt?: string;
+    onApplyAction?: (text: string) => void;
 }
 
-const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, script, initialPrompt }) => {
+const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, script, initialPrompt, onApplyAction }) => {
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    const copyToClipboard = (text: string, index: number) => {
+        navigator.clipboard.writeText(text);
+        setCopiedIndex(index);
+        setTimeout(() => setCopiedIndex(null), 2000);
+    };
+
+    const extractActionText = (text: string) => {
+        // Remove tags de markdown comuns que a IA usa para cabeçalhos de seção
+        // Ex: **Ação:** Texto... ou ### Ação\nTexto...
+        const actionMatch = text.match(/(?:\*\*|###|#)?\s*(?:Ação|Action)\s*:?\s*\**\s*([\s\S]*?)(?=\n(?:\*\*|###|#)|$)/i);
+        if (actionMatch && actionMatch[1]) {
+            return actionMatch[1].trim();
+        }
+        return text;
+    };
 
     // Efeito para resetar mensagens e aplicar prompt inicial quando abre
     useEffect(() => {
@@ -86,14 +104,14 @@ const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, script, 
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-transparent">
+            <div className="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar bg-transparent">
                 {messages.map((msg, i) => (
                     <div
                         key={i}
-                        className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}
+                        className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'} animate-fade-in`}
                     >
                         <div className={`
-              max-w-[85%] p-3 rounded-2xl text-xs leading-relaxed shadow-sm markdown-content
+              max-w-[90%] p-4 rounded-2xl text-xs leading-relaxed shadow-sm markdown-content
               ${msg.role === 'user'
                                 ? 'bg-brand-dark dark:bg-flat-cyan text-white rounded-tr-none'
                                 : 'bg-white dark:bg-white/10 border border-flat-grayDark/20 dark:border-white/10 text-flat-black dark:text-white rounded-tl-none font-medium'
@@ -101,6 +119,30 @@ const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, script, 
             `}>
                             <ReactMarkdown>{msg.parts}</ReactMarkdown>
                         </div>
+
+                        {/* Action Buttons for AI Messages */}
+                        {msg.role === 'model' && i > 0 && (
+                            <div className="flex items-center gap-2 mt-2 ml-1">
+                                <button
+                                    onClick={() => copyToClipboard(msg.parts, i)}
+                                    className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white dark:bg-white/5 border border-flat-grayDark/20 dark:border-white/10 text-[9px] font-black uppercase tracking-widest text-flat-grayMid hover:text-brand-cyan transition-colors"
+                                    title="Copiar texto completo"
+                                >
+                                    <MaterialIcon name={copiedIndex === i ? "check" : "content_copy"} className="text-[10px]" />
+                                    {copiedIndex === i ? 'Copiado!' : 'Copiar'}
+                                </button>
+                                {onApplyAction && (
+                                    <button
+                                        onClick={() => onApplyAction(extractActionText(msg.parts))}
+                                        className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-brand-cyan/10 border border-brand-cyan/20 text-[9px] font-black uppercase tracking-widest text-brand-cyan hover:bg-brand-cyan hover:text-white transition-all active:scale-95"
+                                        title="Aplicar texto ao painel selecionado"
+                                    >
+                                        <MaterialIcon name="auto_fix_high" className="text-[10px]" />
+                                        Aplicar ao Painel
+                                    </button>
+                                )}
+                            </div>
+                        )}
                     </div>
                 ))}
                 {isLoading && (
