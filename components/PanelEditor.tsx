@@ -35,11 +35,11 @@ const PanelEditor: React.FC<PanelEditorProps> = ({ panel, index, onUpdate, onDel
     }
 
     if (!textToRefine.trim()) {
-      onOpenAIChat(`Pode me ajudar a criar o conteúdo para o campo **${field}** do **Painel ${index + 1}** da **Página ${pageNumber}**? Foque apenas neste campo.`);
+      onOpenAIChat(`[COMANDO DO SISTEMA: FOCO NA PÁGINA ${pageNumber}] Por favor, sugira um conteúdo para o campo **${field}** especificamente para o **Painel ${index + 1}** da **Página ${pageNumber}**. Não mencione outras páginas.`);
       return;
     }
 
-    onOpenAIChat(`Pode refinar especificamente o **${field}** do **Painel ${index + 1}** da **Página ${pageNumber}**? Ignore outros campos e outros painéis, foque apenas no refinamento deste texto: "${textToRefine}"`);
+    onOpenAIChat(`[COMANDO DO SISTEMA: FOCO NA PÁGINA ${pageNumber}] Refine o seguinte texto para o campo **${field}** do **Painel ${index + 1}** da **Página ${pageNumber}**: "${textToRefine}". Ignore completamente as outras páginas do roteiro.`);
   };
 
   const actionRef = React.useRef<HTMLTextAreaElement>(null);

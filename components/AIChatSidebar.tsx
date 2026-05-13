@@ -100,7 +100,9 @@ const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, script, 
                                 ${isOption ? 'border-l-4 border-l-brand-cyan' : ''}
                             `}
                         >
-                            {/* Action Buttons - Integrated Footer */}
+                            <ReactMarkdown>{segment}</ReactMarkdown>
+
+                            {/* Action Buttons - Integrated Footer (MOVED TO BOTTOM) */}
                             {onApplyAction && (
                                 <div className="mt-4 pt-3 border-t border-brand-cyan/10 flex flex-wrap items-center gap-2">
                                     <button
@@ -144,9 +146,6 @@ const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, script, 
                                     )}
                                 </div>
                             )}
-
-
-                            <ReactMarkdown>{segment}</ReactMarkdown>
                         </div>
                     );
                 })}
