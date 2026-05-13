@@ -28,10 +28,18 @@ const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, script, 
     const extractPanelUpdates = (text: string): Partial<PanelData> => {
         const updates: Partial<PanelData> = {};
 
-        // Extrai todas as Ações e as une
-        const actionMatches = text.matchAll(/(?:🎬|📝)?\s*(?:\*\*|###|#)?\s*\b(?:Ação|Action)\b\s*:?\s*\**\s*([\s\S]*?)(?=\n(?:\*\*|###|#|🎬|📝|💬|🎙️|📜|---)|$)/gi);
+        // Extrai todas as Ações e Enquadramentos e os une
+        const framingMatches = text.matchAll(/(?:🎬)?\s*(?:\*\*|###|#)?\s*\b(?:Enquadramento|Framing|Shot)\b\s*:?\s*\**\s*([\s\S]*?)(?=\n(?:\*\*|###|#|🎬|📝|💬|🎙️|📜|---)|$)/gi);
+        const actionMatches = text.matchAll(/(?:📝)?\s*(?:\*\*|###|#)?\s*\b(?:Ação|Action)\b\s*:?\s*\**\s*([\s\S]*?)(?=\n(?:\*\*|###|#|🎬|📝|💬|🎙️|📜|---)|$)/gi);
+        
+        const framings = Array.from(framingMatches).map(m => m[1].trim()).filter(Boolean);
         const actions = Array.from(actionMatches).map(m => m[1].trim()).filter(Boolean);
-        if (actions.length > 0) updates.action = actions.join('\n\n');
+        
+        let finalAction = "";
+        if (framings.length > 0) finalAction += `**ENQUADRAMENTO:** ${framings.join(' / ')}\n\n`;
+        if (actions.length > 0) finalAction += actions.join('\n\n');
+        
+        if (finalAction) updates.action = finalAction.trim();
 
         // Extrai todas as Legendas e as une
         const captionMatches = text.matchAll(/(?:💬|🎙️|📜)?\s*(?:\*\*|###|#)?\s*\b(?:Legenda|Caption|Narração)\b\s*:?\s*\**\s*([\s\S]*?)(?=\n(?:\*\*|###|#|🎬|📝|💬|🎙️|📜|---)|$)/gi);
@@ -52,7 +60,7 @@ const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, script, 
 
         if (dialogues.length > 0) {
             const filteredDialogues = dialogues.filter(d => 
-                !['AÇÃO', 'ACTION', 'LEGENDA', 'CAPTION', 'NARRAÇÃO', 'OPÇÃO'].includes(d.character)
+                !['AÇÃO', 'ACTION', 'LEGENDA', 'CAPTION', 'NARRAÇÃO', 'OPÇÃO', 'ENQUADRAMENTO', 'FRAMING', 'SHOT'].includes(d.character)
             );
             if (filteredDialogues.length > 0) updates.dialogues = filteredDialogues;
         }
@@ -273,7 +281,7 @@ const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, script, 
                     </button>
                 </div>
                 <p className="text-[8px] text-center text-flat-grayMid dark:text-white/20 mt-3 font-bold uppercase tracking-widest opacity-50">
-                    PanelCraft v1.5.3 | Powered by Gemini 3 Flash
+                    PanelCraft v1.5.4 | Powered by Gemini 3 Flash
                 </p>
             </div>
             <style>{`
