@@ -29,11 +29,11 @@ const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, script, 
         const updates: Partial<PanelData> = {};
 
         // Extrai todas as Ações e Enquadramentos e os une
-        const framingMatches = text.matchAll(/(?:🎬)?\s*(?:\*\*|###|#)?\s*\b(?:Enquadramento|Framing|Shot)\b\s*:?\s*\**\s*([\s\S]*?)(?=\n(?:\*\*|###|#|🎬|📝|💬|🎙️|📜|---)|$)/gi);
-        const actionMatches = text.matchAll(/(?:📝)?\s*(?:\*\*|###|#)?\s*\b(?:Ação|Action)\b\s*:?\s*\**\s*([\s\S]*?)(?=\n(?:\*\*|###|#|🎬|📝|💬|🎙️|📜|---)|$)/gi);
+        const framingMatches = text.matchAll(/(?:🎬|📸|🎥)?\s*(?:\*\*|###|#)?\s*\b(?:Enquadramento|Framing|Shot|Ângulo)\b\s*:?\s*\**\s*([\s\S]*?)(?=\n(?:\*\*|###|#|🎬|📝|📸|🎥|Ação|Action|💬|🎙️|📜|---)|$)/gi);
+        const actionMatches = text.matchAll(/(?:📝|🎬|🎞️)?\s*(?:\*\*|###|#)?\s*\b(?:Ação|Action|Cena)\b\s*:?\s*\**\s*([\s\S]*?)(?=\n(?:\*\*|###|#|🎬|📝|📸|🎥|Ação|Action|💬|🎙️|📜|---)|$)/gi);
         
-        const framings = Array.from(framingMatches).map(m => m[1].trim()).filter(Boolean);
-        const actions = Array.from(actionMatches).map(m => m[1].trim()).filter(Boolean);
+        const framings = Array.from(framingMatches).map(m => m[1].replace(/^\*\*|\*\*$/g, '').trim()).filter(Boolean);
+        const actions = Array.from(actionMatches).map(m => m[1].replace(/^\*\*|\*\*$/g, '').trim()).filter(Boolean);
         
         let finalAction = "";
         if (framings.length > 0) finalAction += `**ENQUADRAMENTO:** ${framings.join(' / ')}\n\n`;
@@ -46,15 +46,19 @@ const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, script, 
         const captions = Array.from(captionMatches).map(m => m[1].trim()).filter(Boolean);
         if (captions.length > 0) updates.captions = captions.join('\n\n');
 
-        // Extrai Diálogos (Busca por Diálogo (PERSONAGEM): "Texto" ou PERSONAGEM: Texto)
-        const dialogueMatches = text.matchAll(/(?:💬|🗣️)?\s*(?:\*\*|###)?\s*(?:Diálogo\s*\(([^)]+)\)|([A-ZÀ-Úa-zà-ú\s]{2,}))\s*(?:\*\*|###)?\s*:\s*(?:["“])?([\s\S]*?)(?:["”])?(?=\n(?:\*\*|###|#|🎬|📝|💬|🎙️|📜|---)|$)/gi);
+        // Extrai Diálogos (Mais flexível: Diálogo (X): Texto, X: Texto, etc.)
+        const dialogueMatches = text.matchAll(/(?:💬|🗣️|🎙️|🗨️)?\s*(?:\*\*|###)?\s*(?:Diálogo\s*\(?([^):]+)\)?|([A-ZÀ-Ú\s]{2,}))\s*(?:\*\*|###)?\s*[:\-\—]\s*(?:["“—])?\s*([\s\S]*?)(?:["”])?(?=\n(?:\*\*|###|#|🎬|📝|📸|🎥|Ação|Action|💬|🗣️|🎙️|🗨️|📜|---)|$)/gi);
         
         const dialogues = Array.from(dialogueMatches).map(match => {
-            const charName = (match[1] || match[2] || '').trim().toUpperCase();
+            const charName = (match[1] || match[2] || '').replace(/^\*\*|\*\*$/g, '').trim().toUpperCase();
+            let content = match[3].trim();
+            // Remove aspas ou travessões extras no início do conteúdo extraído
+            content = content.replace(/^["“—\-\s]+/, '').replace(/["”\s]+$/, '');
+            
             return {
                 id: Math.random().toString(36).substr(2, 9),
                 character: charName,
-                text: match[3].trim()
+                text: content
             };
         });
 
@@ -281,7 +285,7 @@ const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, script, 
                     </button>
                 </div>
                 <p className="text-[8px] text-center text-flat-grayMid dark:text-white/20 mt-3 font-bold uppercase tracking-widest opacity-50">
-                    PanelCraft v1.5.4 | Powered by Gemini 3 Flash
+                    PanelCraft v1.5.5 | Powered by Gemini 3 Flash
                 </p>
             </div>
             <style>{`
