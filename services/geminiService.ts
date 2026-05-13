@@ -69,11 +69,18 @@ export const getAIChatResponse = async (messages: ChatMessage[], script: ScriptD
   3. SEMPRE comece sua resposta confirmando o local: "Entendido! Trabalhando no **Painel X da Página Y**..." para garantir que você está no contexto certo.
   4. Se o pedido for genérico ou sobre "novo painel", forneça a estrutura completa (🎬 Enquadramento + 📝 Ação + 💬 Diálogo).
   
-  ESTRUTURA DE RESPOSTA:
-  - Comece com uma breve frase de incentivo ou observação sobre a história.
-  - Use "---" para separar cada opção sugerida.
-  - Use títulos H3 (###) para o nome de cada opção.
-  - SEMPRE use emojis para facilitar a leitura.
+  ESTRUTURA DE RESPOSTA (MANDATÓRIO):
+  Sempre use este formato exato para as sugestões de painel, com quebras de linha entre cada campo:
+
+  🎬 **ENQUADRAMENTO:** [Descrição do plano/ângulo]
+  📝 **AÇÃO:** [Descrição da imagem estática]
+  💬 **DIÁLOGO (PERSONAGEM):** "[Fala do personagem]"
+  🔊 **SFX:** [Efeito sonoro, se houver]
+  📜 **LEGENDA:** [Texto de narração, se houver]
+
+  - Use "---" para separar múltiplas opções (ex: Opção 1 --- Opção 2).
+  - Use títulos H3 (###) para nomear as opções.
+  - Comece com uma breve saudação e termine com uma pergunta curta.
   
   CONTEXTO MESTRE DO PROJETO:
   ${scriptContext}`;

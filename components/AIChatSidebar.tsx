@@ -28,31 +28,39 @@ const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, script, 
     const extractPanelUpdates = (text: string): Partial<PanelData> => {
         const updates: Partial<PanelData> = {};
 
-        // Extrai todas as Ações e Enquadramentos e os une
-        const framingMatches = text.matchAll(/(?:🎬|📸|🎥)?\s*(?:\*\*|###|#)?\s*\b(?:Enquadramento|Framing|Shot|Ângulo)\b\s*:?\s*\**\s*([\s\S]*?)(?=\n(?:\*\*|###|#|🎬|📝|📸|🎥|Ação|Action|💬|🎙️|📜|---)|$)/gi);
-        const actionMatches = text.matchAll(/(?:📝|🎬|🎞️)?\s*(?:\*\*|###|#)?\s*\b(?:Ação|Action|Cena)\b\s*:?\s*\**\s*([\s\S]*?)(?=\n(?:\*\*|###|#|🎬|📝|📸|🎥|Ação|Action|💬|🎙️|📜|---)|$)/gi);
-        
+        // Lista de marcadores para o lookahead (para saber onde parar a extração de um campo)
+        const markers = '(?:🎬|📝|📸|🎥|🔊|💬|🗣️|🎙️|🗨️|📜|---|\\[|###|\\b(?:Enquadramento|Framing|Shot|Ângulo|Ação|Action|Cena|Diálogo|SFX|Som|Efeito|Legenda|Caption|Narração)\\b)';
+
+        // 1. Extrai Enquadramento
+        const framingMatches = text.matchAll(new RegExp(`(?:🎬|📸|🎥)?\\s*(?:\\*\\*|###|#)?\\s*\\b(?:Enquadramento|Framing|Shot|Ângulo)\\b\\s*:?\\s*\\**\\s*([\\s\\S]*?)(?=\\n?${markers}|$)`, 'gi'));
         const framings = Array.from(framingMatches).map(m => m[1].replace(/^\*\*|\*\*$/g, '').trim()).filter(Boolean);
+
+        // 2. Extrai Ação
+        const actionMatches = text.matchAll(new RegExp(`(?:📝|🎞️)?\\s*(?:\\*\\*|###|#)?\\s*\\b(?:Ação|Action|Cena)\\b\\s*:?\\s*\\**\\s*([\\s\\S]*?)(?=\\n?${markers}|$)`, 'gi'));
         const actions = Array.from(actionMatches).map(m => m[1].replace(/^\*\*|\*\*$/g, '').trim()).filter(Boolean);
+
+        // 3. Extrai SFX (Efeitos Sonoros)
+        const sfxMatches = text.matchAll(new RegExp(`(?:🔊|🔉)?\\s*(?:\\*\\*|###|#)?\\s*\\b(?:SFX|Som|Efeito Sonoro|Efeito)\\b\\s*:?\\s*\\**\\s*([\\s\\S]*?)(?=\\n?${markers}|$)`, 'gi'));
+        const sfxs = Array.from(sfxMatches).map(m => m[1].replace(/^\*\*|\*\*$/g, '').trim()).filter(Boolean);
         
         let finalAction = "";
         if (framings.length > 0) finalAction += `**ENQUADRAMENTO:** ${framings.join(' / ')}\n\n`;
         if (actions.length > 0) finalAction += actions.join('\n\n');
+        if (sfxs.length > 0) finalAction += `\n\n**SFX:** ${sfxs.join(' / ')}`;
         
         if (finalAction) updates.action = finalAction.trim();
 
-        // Extrai todas as Legendas e as une
-        const captionMatches = text.matchAll(/(?:💬|🎙️|📜)?\s*(?:\*\*|###|#)?\s*\b(?:Legenda|Caption|Narração)\b\s*:?\s*\**\s*([\s\S]*?)(?=\n(?:\*\*|###|#|🎬|📝|💬|🎙️|📜|---)|$)/gi);
+        // 4. Extrai Legendas
+        const captionMatches = text.matchAll(new RegExp(`(?:📜|🎙️)?\\s*(?:\\*\\*|###|#)?\\s*\\b(?:Legenda|Caption|Narração)\\b\\s*:?\\s*\\**\\s*([\\s\\S]*?)(?=\\n?${markers}|$)`, 'gi'));
         const captions = Array.from(captionMatches).map(m => m[1].trim()).filter(Boolean);
         if (captions.length > 0) updates.captions = captions.join('\n\n');
 
-        // Extrai Diálogos (Mais flexível: Diálogo (X): Texto, X: Texto, etc.)
-        const dialogueMatches = text.matchAll(/(?:💬|🗣️|🎙️|🗨️)?\s*(?:\*\*|###)?\s*(?:Diálogo\s*\(?([^):]+)\)?|([A-ZÀ-Ú\s]{2,}))\s*(?:\*\*|###)?\s*[:\-\—]\s*(?:["“—])?\s*([\s\S]*?)(?:["”])?(?=\n(?:\*\*|###|#|🎬|📝|📸|🎥|Ação|Action|💬|🗣️|🎙️|🗨️|📜|---)|$)/gi);
+        // 5. Extrai Diálogos
+        const dialogueMatches = text.matchAll(new RegExp(`(?:💬|🗣️|🎙️|🗨️)?\\s*(?:\\*\\*|###)?\\s*(?:Diálogo\\s*\\(?([^):]+)\\)?|([A-ZÀ-Ú\\s]{2,}))\\s*(?:\\*\\*|###)?\\s*[:\\-\\—]\\s*(?:["“—])?\\s*([\\s\\S]*?)(?:["”])?(?=\\n?${markers}|$)`, 'gi'));
         
         const dialogues = Array.from(dialogueMatches).map(match => {
             const charName = (match[1] || match[2] || '').replace(/^\*\*|\*\*$/g, '').trim().toUpperCase();
             let content = match[3].trim();
-            // Remove aspas ou travessões extras no início do conteúdo extraído
             content = content.replace(/^["“—\-\s]+/, '').replace(/["”\s]+$/, '');
             
             return {
@@ -285,7 +293,7 @@ const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, script, 
                     </button>
                 </div>
                 <p className="text-[8px] text-center text-flat-grayMid dark:text-white/20 mt-3 font-bold uppercase tracking-widest opacity-50">
-                    PanelCraft v1.5.6 | Powered by Gemini 3 Flash
+                    PanelCraft v1.5.7 | Powered by Gemini 3 Flash
                 </p>
             </div>
             <style>{`
