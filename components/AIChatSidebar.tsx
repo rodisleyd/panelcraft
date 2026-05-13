@@ -115,7 +115,7 @@ const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, script, 
                             <ReactMarkdown>{segment}</ReactMarkdown>
 
                             {/* Action Buttons - Integrated Footer (MOVED TO BOTTOM) */}
-                            {onApplyAction && (
+                            {onApplyAction && hasUpdates && (
                                 <div className="mt-4 pt-3 border-t border-brand-cyan/10 flex flex-wrap items-center gap-2">
                                     <button
                                         onClick={() => copyToClipboard(segment, msgIndex + sIdx * 100)}
@@ -285,7 +285,7 @@ const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, script, 
                     </button>
                 </div>
                 <p className="text-[8px] text-center text-flat-grayMid dark:text-white/20 mt-3 font-bold uppercase tracking-widest opacity-50">
-                    PanelCraft v1.5.5 | Powered by Gemini 3 Flash
+                    PanelCraft v1.5.6 | Powered by Gemini 3 Flash
                 </p>
             </div>
             <style>{`
