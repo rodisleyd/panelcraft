@@ -72,13 +72,9 @@ const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, script, 
 
         if (dialogues.length > 0) {
             const filteredDialogues = dialogues.filter(d => 
-                !['AÇÃO', 'ACTION', 'LEGENDA', 'CAPTION', 'NARRAÇÃO', 'OPÇÃO', 'ENQUADRAMENTO', 'FRAMING', 'SHOT'].includes(d.character)
+                !['AÇÃO', 'ACTION', 'LEGENDA', 'CAPTION', 'NARRAÇÃO', 'OPÇÃO', 'ENQUADRAMENTO', 'FRAMING', 'SHOT', 'PÁGINA', 'PAGINA', 'PAINEL'].includes(d.character)
             );
             if (filteredDialogues.length > 0) updates.dialogues = filteredDialogues;
-        }
-
-        if (Object.keys(updates).length === 0 && text.length < 600 && !text.includes('OPÇÃO')) {
-            updates.action = text.trim();
         }
 
         return updates;
@@ -293,7 +289,7 @@ const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, script, 
                     </button>
                 </div>
                 <p className="text-[8px] text-center text-flat-grayMid dark:text-white/20 mt-3 font-bold uppercase tracking-widest opacity-50">
-                    PanelCraft v1.5.7 | Powered by Gemini 3 Flash
+                    PanelCraft v1.5.8 | Powered by Gemini 3 Flash
                 </p>
             </div>
             <style>{`
