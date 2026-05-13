@@ -18,9 +18,10 @@ interface PanelEditorProps {
   characters: { name: string }[];
   onShowAlert: (title: string, message: string) => void;
   onOpenAIChat: (initialPrompt?: string) => void;
+  pageNumber: number;
 }
 
-const PanelEditor: React.FC<PanelEditorProps> = ({ panel, index, onUpdate, onDelete, isActive, onSelect, onAddPanel, pageId, characters, onShowAlert, onOpenAIChat }) => {
+const PanelEditor: React.FC<PanelEditorProps> = ({ panel, index, onUpdate, onDelete, isActive, onSelect, onAddPanel, pageId, characters, onShowAlert, onOpenAIChat, pageNumber }) => {
   const [isRefining, setIsRefining] = React.useState<string | null>(null);
   const [isNotesOpen, setIsNotesOpen] = React.useState(false);
 
@@ -34,11 +35,11 @@ const PanelEditor: React.FC<PanelEditorProps> = ({ panel, index, onUpdate, onDel
     }
 
     if (!textToRefine.trim()) {
-      onOpenAIChat(`Pode me ajudar a criar o conteúdo para o campo **${field}** do painel ${index + 1}? Foque apenas neste campo.`);
+      onOpenAIChat(`Pode me ajudar a criar o conteúdo para o campo **${field}** do **Painel ${index + 1}** da **Página ${pageNumber}**? Foque apenas neste campo.`);
       return;
     }
 
-    onOpenAIChat(`Pode refinar especificamente o **${field}** do painel ${index + 1}? Ignore outros campos, foque apenas no refinamento deste texto: "${textToRefine}"`);
+    onOpenAIChat(`Pode refinar especificamente o **${field}** do **Painel ${index + 1}** da **Página ${pageNumber}**? Ignore outros campos e outros painéis, foque apenas no refinamento deste texto: "${textToRefine}"`);
   };
 
   const actionRef = React.useRef<HTMLTextAreaElement>(null);

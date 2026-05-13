@@ -100,86 +100,52 @@ const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, script, 
                                 ${isOption ? 'border-l-4 border-l-brand-cyan' : ''}
                             `}
                         >
-                            {/* Action Buttons - Top Right Floating - SEMPRE VISÍVEIS para facilitar */}
-                            <div className="absolute -top-3 -right-2 flex flex-wrap items-center gap-1 z-10 max-w-[200px] justify-end">
-                                <button
-                                    onClick={() => copyToClipboard(segment, msgIndex + sIdx * 100)}
-                                    className="flex items-center gap-1 px-2 py-1 rounded-lg bg-brand-dark dark:bg-white text-white dark:text-brand-dark shadow-xl text-[8px] font-black uppercase tracking-widest hover:scale-110 transition-all border border-white/10"
-                                    title="Copiar este bloco"
-                                >
-                                    <MaterialIcon name={copiedIndex === (msgIndex + sIdx * 100) ? "check" : "content_copy"} className="text-[10px]" />
-                                    {copiedIndex === (msgIndex + sIdx * 100) ? 'Copiar' : 'Copiar'}
-                                </button>
-                                
-                                {onApplyAction && (
-                                    <div className="flex gap-1 flex-wrap justify-end">
-                                        {updates.action && (
-                                            <button
-                                                onClick={() => onApplyAction({ action: updates.action })}
-                                                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-brand-cyan text-white shadow-xl text-[8px] font-black uppercase tracking-widest hover:scale-110 transition-all border border-white/10"
-                                                title="Aplicar Ação"
-                                            >
-                                                <MaterialIcon name="movie" className="text-[10px]" />
-                                                Ação
-                                            </button>
-                                        )}
-                                        {updates.dialogues && (
-                                            <button
-                                                onClick={() => onApplyAction({ dialogues: updates.dialogues })}
-                                                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-brand-pink text-white shadow-xl text-[8px] font-black uppercase tracking-widest hover:scale-110 transition-all border border-white/10"
-                                                title="Aplicar Diálogos"
-                                            >
-                                                <MaterialIcon name="forum" className="text-[10px]" />
-                                                Diálogos
-                                            </button>
-                                        )}
-                                        {updates.captions && (
-                                            <button
-                                                onClick={() => onApplyAction({ captions: updates.captions })}
-                                                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-flat-grayLight text-white shadow-xl text-[8px] font-black uppercase tracking-widest hover:scale-110 transition-all border border-white/10"
-                                                title="Aplicar Legenda"
-                                            >
-                                                <MaterialIcon name="notes" className="text-[10px]" />
-                                                Legenda
-                                            </button>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
+                            {/* Action Buttons - Integrated Footer */}
+                            {onApplyAction && (
+                                <div className="mt-4 pt-3 border-t border-brand-cyan/10 flex flex-wrap items-center gap-2">
+                                    <button
+                                        onClick={() => copyToClipboard(segment, msgIndex + sIdx * 100)}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-flat-grayDark/10 dark:bg-white/5 text-flat-grayDark dark:text-white/60 hover:bg-brand-cyan hover:text-white transition-all text-[9px] font-black uppercase tracking-widest"
+                                        title="Copiar este bloco"
+                                    >
+                                        <MaterialIcon name={copiedIndex === (msgIndex + sIdx * 100) ? "check" : "content_copy"} className="text-[12px]" />
+                                        {copiedIndex === (msgIndex + sIdx * 100) ? 'Copiado!' : 'Copiar'}
+                                    </button>
 
-                            {/* Mobile Visible Buttons */}
-                            <div className="flex md:hidden flex-wrap items-center gap-2 mb-2 pb-1 border-b border-brand-cyan/10">
-                                <button
-                                    onClick={() => copyToClipboard(segment, msgIndex + sIdx * 100)}
-                                    className="text-[8px] font-bold text-brand-cyan uppercase tracking-widest flex items-center gap-1"
-                                >
-                                    <MaterialIcon name="content_copy" className="text-[10px]" /> Copiar
-                                </button>
-                                {updates.action && (
-                                    <button
-                                        onClick={() => onApplyAction?.({ action: updates.action })}
-                                        className="text-[8px] font-bold text-brand-cyan uppercase tracking-widest flex items-center gap-1"
-                                    >
-                                        <MaterialIcon name="movie" className="text-[10px]" /> Ação
-                                    </button>
-                                )}
-                                {updates.dialogues && (
-                                    <button
-                                        onClick={() => onApplyAction?.({ dialogues: updates.dialogues })}
-                                        className="text-[8px] font-bold text-flat-pink uppercase tracking-widest flex items-center gap-1"
-                                    >
-                                        <MaterialIcon name="forum" className="text-[10px]" /> Diálogos
-                                    </button>
-                                )}
-                                {updates.captions && (
-                                    <button
-                                        onClick={() => onApplyAction?.({ captions: updates.captions })}
-                                        className="text-[8px] font-bold text-flat-grayLight uppercase tracking-widest flex items-center gap-1"
-                                    >
-                                        <MaterialIcon name="notes" className="text-[10px]" /> Legenda
-                                    </button>
-                                )}
-                            </div>
+                                    {updates.action && (
+                                        <button
+                                            onClick={() => onApplyAction({ action: updates.action })}
+                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-cyan/10 text-brand-cyan hover:bg-brand-cyan hover:text-white transition-all text-[9px] font-black uppercase tracking-widest border border-brand-cyan/20"
+                                            title="Aplicar Ação"
+                                        >
+                                            <MaterialIcon name="movie" className="text-[12px]" />
+                                            Aplicar Ação
+                                        </button>
+                                    )}
+                                    {updates.dialogues && (
+                                        <button
+                                            onClick={() => onApplyAction({ dialogues: updates.dialogues })}
+                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-pink/10 text-brand-pink hover:bg-brand-pink hover:text-white transition-all text-[9px] font-black uppercase tracking-widest border border-brand-pink/20"
+                                            title="Aplicar Diálogos"
+                                        >
+                                            <MaterialIcon name="forum" className="text-[12px]" />
+                                            Diálogos
+                                        </button>
+                                    )}
+                                    {updates.captions && (
+                                        <button
+                                            onClick={() => onApplyAction({ captions: updates.captions })}
+                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-flat-grayMid/10 text-flat-grayMid hover:bg-flat-grayMid hover:text-white transition-all text-[9px] font-black uppercase tracking-widest border border-flat-grayMid/20"
+                                            title="Aplicar Legenda"
+                                        >
+                                            <MaterialIcon name="notes" className="text-[12px]" />
+                                            Legenda
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+
+
                             <ReactMarkdown>{segment}</ReactMarkdown>
                         </div>
                     );

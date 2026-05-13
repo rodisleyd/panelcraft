@@ -971,6 +971,7 @@ const App: React.FC = () => {
                     key={panel.id}
                     panel={panel}
                     index={idx}
+                    pageNumber={page.number}
                     isActive={activePanelId === panel.id}
                     onSelect={handleSelectPanel}
                     onUpdate={updatePanel}
