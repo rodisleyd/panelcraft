@@ -171,42 +171,76 @@ const ScriptPreview: React.FC<ScriptPreviewProps> = ({ script, onClose, onExport
             size: A4;
             margin: 0;
           }
+          
+          /* Forçar fundo branco em tudo */
+          html, body, #root, .fixed, .relative, div {
+            background-color: white !important;
+            background-image: none !important;
+            color: black !important;
+          }
+
           body {
             margin: 0;
             padding: 0;
-            background: white !important;
             overflow: visible !important;
             height: auto !important;
           }
+
+          /* Esconder elementos desnecessários */
+          .print\\:hidden, 
+          header, 
+          footer, 
+          button, 
+          .sticky {
+            display: none !important;
+          }
+
           /* Reset do container fixed para print */
           .fixed.inset-0.z-50 {
             position: static !important;
             display: block !important;
-            background: white !important;
             width: 100% !important;
             height: auto !important;
             padding: 0 !important;
             margin: 0 !important;
+            border: none !important;
           }
+
           .animate-fade-in {
             animation: none !important;
           }
+
           .page-break-content {
             page-break-after: always !important;
             break-after: always !important;
             margin: 0 !important;
+            padding: 15mm !important;
             border: none !important;
+            width: 210mm !important;
+            min-height: 297mm !important;
+            box-shadow: none !important;
+            background: white !important;
           }
+
           .break-words {
             word-break: normal !important;
             overflow-wrap: break-word !important;
-            word-wrap: break-word !important;
           }
-          /* Garantir que as células da tabela não forcem quebras estranhas */
+
+          .grid.grid-cols-3 {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr 1fr !important;
+            border: 1px solid black !important;
+          }
+
           .grid.grid-cols-3 > div {
-            min-width: 0;
-            word-break: normal !important;
+            border-right: 1px solid black !important;
           }
+
+          .grid.grid-cols-3 > div:last-child {
+            border-right: none !important;
+          }
+
           ::-webkit-scrollbar {
             display: none;
           }
