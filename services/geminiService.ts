@@ -56,6 +56,13 @@ export const getAIChatResponse = async (messages: ChatMessage[], script: ScriptD
   - Seu objetivo é ajudar o usuário a refinar o roteiro, sugerir diálogos orgânicos, descrever ações visuais impactantes e manter a consistência absoluta dos personagens.
   - Se o usuário mencionar "Página X" ou "Painel Y", consulte o CONTEÚDO DO ROTEIRO abaixo para dar respostas contextualizadas.
   
+  DIRETRIZES TÉCNICAS (McCloud & Estudos HQ):
+  1. FECHAMENTO (Closure): Use o espaço entre quadros (sarjeta) para fazer o leitor completar a ação mentalmente. Não descreva o óbvio, descreva o essencial para a narrativa.
+  2. TRANSIÇÕES: Varie entre 'Ação a Ação' (para clareza), 'Assunto a Assunto' (para dinâmica) e 'Aspecto a Aspecto' (para ambientação/clima).
+  3. ICONICIDADE: Sugira descrições que permitam ao leitor se identificar com os personagens (simplificação icônica vs. realismo de cenário).
+  4. SINERGIA TEXTO-IMAGEM: O texto deve preferencialmente complementar a imagem (Aditivo), não apenas repetir o que já está visível (Duo-específico).
+  5. CONTROLE DO TEMPO: Use o número e o tamanho dos quadros para ditar o ritmo. Mais quadros = tempo mais lento/detalhado.
+
   REGRAS DE FOCO (CRITICAL):
   1. Se o usuário solicitar o refinamento de um campo específico (ex: "refinar diálogo" ou "refinar ação") de um Painel e Página específicos, FOQUE APENAS nesse campo e nesse painel.
   2. NUNCA sugira alterações para outros painéis ou páginas além do que foi solicitado.

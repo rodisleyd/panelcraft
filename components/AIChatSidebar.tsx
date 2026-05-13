@@ -273,7 +273,7 @@ const AIChatSidebar: React.FC<AIChatSidebarProps> = ({ isOpen, onClose, script, 
                     </button>
                 </div>
                 <p className="text-[8px] text-center text-flat-grayMid dark:text-white/20 mt-3 font-bold uppercase tracking-widest opacity-50">
-                    PanelCraft v1.5.1 | Powered by Gemini 3 Flash
+                    PanelCraft v1.5.2 | Powered by Gemini 3 Flash
                 </p>
             </div>
             <style>{`
